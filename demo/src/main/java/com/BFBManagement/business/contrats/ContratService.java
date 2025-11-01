@@ -167,6 +167,47 @@ public class ContratService {
     }
 
     /**
+     * Job combiné : marque en retard les contrats EN_COURS dépassés 
+     * et annule les contrats EN_ATTENTE bloqués par ces retards.
+     * 
+     * Logique :
+     * 1. Passe EN_COURS → EN_RETARD si dateFin < today
+     * 2. Pour chaque contrat EN_RETARD, annule les EN_ATTENTE du même véhicule 
+     *    si dateDebut <= today (considérés comme bloqués)
+     */
+    public int markLateAndCancelBlocked() {
+        LocalDate today = LocalDate.now();
+        int totalModified = 0;
+        
+        // Étape 1 : Marquer en retard les contrats EN_COURS dépassés
+        List<Contrat> contratsEnCours = contratRepository.findByEtat(EtatContrat.EN_COURS);
+        for (Contrat contrat : contratsEnCours) {
+            if (contrat.getDateFin().isBefore(today)) {
+                contrat.markLate();
+                contratRepository.save(contrat);
+                totalModified++;
+                
+                // Étape 2 : Annuler les EN_ATTENTE bloqués sur le même véhicule
+                List<Contrat> awaitingForVehicle = contratRepository.findByVehiculeIdAndEtat(
+                    contrat.getVehiculeId(), 
+                    EtatContrat.EN_ATTENTE
+                );
+                
+                for (Contrat awaitingContrat : awaitingForVehicle) {
+                    // Considéré comme bloqué si dateDebut <= today
+                    if (!awaitingContrat.getDateDebut().isAfter(today)) {
+                        awaitingContrat.cancel();
+                        contratRepository.save(awaitingContrat);
+                        totalModified++;
+                    }
+                }
+            }
+        }
+        
+        return totalModified;
+    }
+
+    /**
      * Récupère un contrat par ID.
      */
     @Transactional(readOnly = true)
