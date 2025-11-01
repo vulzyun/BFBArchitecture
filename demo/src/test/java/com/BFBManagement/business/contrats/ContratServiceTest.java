@@ -349,4 +349,110 @@ class ContratServiceTest {
         ));
         verify(contratRepository, times(1)).save(any(Contrat.class));
     }
+
+    // ==================== Tests markLateAndCancelBlocked() ====================
+
+    @Test
+    void mark_late_moves_inprogress_to_late_when_past_enddate() {
+        // Given: contrat EN_COURS avec dateFin hier
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        Contrat contrat = new Contrat();
+        contrat.setId(UUID.randomUUID());
+        contrat.setVehiculeId(UUID.randomUUID());
+        contrat.setEtat(EtatContrat.EN_COURS);
+        contrat.setDateFin(yesterday);
+        
+        when(contratRepository.findByEtat(EtatContrat.EN_COURS))
+            .thenReturn(List.of(contrat));
+        when(contratRepository.findByVehiculeIdAndEtat(any(), eq(EtatContrat.EN_ATTENTE)))
+            .thenReturn(List.of());
+        when(contratRepository.save(any(Contrat.class))).thenAnswer(inv -> inv.getArgument(0));
+        
+        // When
+        contratService.markLateAndCancelBlocked();
+        
+        // Then: contrat doit passer à EN_RETARD
+        verify(contratRepository).save(argThat(c -> 
+            c.getEtat() == EtatContrat.EN_RETARD
+        ));
+    }
+
+    @Test
+    void mark_late_cancels_next_awaiting_if_blocked_on_same_vehicle() {
+        // Given: A EN_COURS fin hier, B EN_ATTENTE début aujourd'hui, même véhicule
+        UUID vehiculeId = UUID.randomUUID();
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
+        
+        Contrat contratA = new Contrat();
+        contratA.setId(UUID.randomUUID());
+        contratA.setVehiculeId(vehiculeId);
+        contratA.setEtat(EtatContrat.EN_COURS);
+        contratA.setDateFin(yesterday);
+        
+        Contrat contratB = new Contrat();
+        contratB.setId(UUID.randomUUID());
+        contratB.setVehiculeId(vehiculeId);
+        contratB.setEtat(EtatContrat.EN_ATTENTE);
+        contratB.setDateDebut(today);
+        contratB.setDateFin(today.plusDays(5));
+        
+        when(contratRepository.findByEtat(EtatContrat.EN_COURS))
+            .thenReturn(List.of(contratA));
+        when(contratRepository.findByVehiculeIdAndEtat(vehiculeId, EtatContrat.EN_ATTENTE))
+            .thenReturn(List.of(contratB));
+        when(contratRepository.save(any(Contrat.class))).thenAnswer(inv -> inv.getArgument(0));
+        
+        // When: markLateAndCancelBlocked()
+        contratService.markLateAndCancelBlocked();
+        
+        // Then: A→EN_RETARD, B→ANNULE
+        verify(contratRepository, times(2)).save(any(Contrat.class));
+        verify(contratRepository).save(argThat(c -> 
+            c.getId().equals(contratA.getId()) && c.getEtat() == EtatContrat.EN_RETARD
+        ));
+        verify(contratRepository).save(argThat(c -> 
+            c.getId().equals(contratB.getId()) && c.getEtat() == EtatContrat.ANNULE
+        ));
+    }
+
+    @Test
+    void mark_late_does_not_cancel_unrelated_or_future() {
+        // Given: A EN_COURS fin hier, B EN_ATTENTE commence dans 10j, même véhicule
+        UUID vehiculeId = UUID.randomUUID();
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate futureDate = LocalDate.now().plusDays(10);
+        
+        Contrat contratA = new Contrat();
+        contratA.setId(UUID.randomUUID());
+        contratA.setVehiculeId(vehiculeId);
+        contratA.setEtat(EtatContrat.EN_COURS);
+        contratA.setDateFin(yesterday);
+        
+        Contrat contratB = new Contrat();
+        contratB.setId(UUID.randomUUID());
+        contratB.setVehiculeId(vehiculeId);
+        contratB.setEtat(EtatContrat.EN_ATTENTE);
+        contratB.setDateDebut(futureDate);
+        contratB.setDateFin(futureDate.plusDays(5));
+        
+        when(contratRepository.findByEtat(EtatContrat.EN_COURS))
+            .thenReturn(List.of(contratA));
+        when(contratRepository.findByVehiculeIdAndEtat(vehiculeId, EtatContrat.EN_ATTENTE))
+            .thenReturn(List.of(contratB));
+        when(contratRepository.save(any(Contrat.class))).thenAnswer(inv -> inv.getArgument(0));
+        
+        // When
+        contratService.markLateAndCancelBlocked();
+        
+        // Then: seul A est modifié (EN_RETARD), B reste EN_ATTENTE
+        verify(contratRepository, times(1)).save(any(Contrat.class));
+        verify(contratRepository).save(argThat(c -> 
+            c.getId().equals(contratA.getId()) && c.getEtat() == EtatContrat.EN_RETARD
+        ));
+        // B ne doit pas être sauvegardé
+        verify(contratRepository, never()).save(argThat(c -> 
+            c.getId().equals(contratB.getId())
+        ));
+    }
 }
