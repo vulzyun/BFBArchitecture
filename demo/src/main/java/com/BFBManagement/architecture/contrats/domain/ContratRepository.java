@@ -45,6 +45,11 @@ public interface ContratRepository extends JpaRepository<Contrat, UUID> {
     List<Contrat> findByEtat(EtatContrat etat);
 
     /**
+     * Trouve les contrats d'un véhicule dans un état donné.
+     */
+    List<Contrat> findByVehiculeIdAndEtat(UUID vehiculeId, EtatContrat etat);
+
+    /**
      * Trouve les contrats selon des critères de recherche optionnels.
      */
     @Query("SELECT c FROM Contrat c WHERE " +
