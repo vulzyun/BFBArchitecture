@@ -26,32 +26,14 @@ spring:
   # Configuration Swagger/OpenAPI
   springdoc:
     api-docs:
-      path: /v3/api-docs
+      path: /api-docs
     swagger-ui:
       path: /swagger-ui.html
       enabled: true
 
-# Actuator
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
 # Logging
 logging:
   level:
-    com.BFBManagement: INFO
+    com.BFBManagement: DEBUG
     org.hibernate.SQL: DEBUG
-
-# Server
-server:
-  error:
-    include-message: always
-    include-binding-errors: always
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

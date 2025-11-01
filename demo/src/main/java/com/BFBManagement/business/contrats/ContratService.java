@@ -5,10 +5,6 @@ import com.BFBManagement.business.contrats.exceptions.*;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;
 import com.BFBManagement.business.vehicules.EtatVehicule;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,26 +23,14 @@ public class ContratService {
     private final ContratRepository contratRepository;
     private final VehicleStatusPort vehicleStatusPort;
     private final ClientExistencePort clientExistencePort;
-    private final Counter contractsCanceledByVehicleDown;
-    private final Counter contractsCanceledByLateBlock;
 
     public ContratService(
             ContratRepository contratRepository,
             VehicleStatusPort vehicleStatusPort,
-            ClientExistencePort clientExistencePort,
-            MeterRegistry meterRegistry) {
+            ClientExistencePort clientExistencePort) {
         this.contratRepository = contratRepository;
         this.vehicleStatusPort = vehicleStatusPort;
         this.clientExistencePort = clientExistencePort;
-        
-        // Initialiser les compteurs de métriques métier
-        this.contractsCanceledByVehicleDown = Counter.builder("contracts.canceled.byVehicleDown")
-            .description("Nombre de contrats annulés suite à une panne de véhicule")
-            .register(meterRegistry);
-        
-        this.contractsCanceledByLateBlock = Counter.builder("contracts.canceled.byLateBlock")
-            .description("Nombre de contrats annulés car bloqués par un retard")
-            .register(meterRegistry);
     }
 
     /**
@@ -161,71 +145,6 @@ public class ContratService {
     }
 
     /**
-     * Annule tous les contrats EN_ATTENTE d'un véhicule.
-     * Utilisé lorsque le véhicule est marqué en panne.
-     */
-    public int cancelPendingContractsForVehicle(UUID vehiculeId) {
-        List<Contrat> pendingContrats = contratRepository.findByVehiculeIdAndEtat(
-            vehiculeId, 
-            EtatContrat.EN_ATTENTE
-        );
-        
-        int count = 0;
-        for (Contrat contrat : pendingContrats) {
-            if (contrat.getEtat() == EtatContrat.EN_ATTENTE) {
-                contrat.cancel();
-                contratRepository.save(contrat);
-                contractsCanceledByVehicleDown.increment();
-                count++;
-            }
-        }
-        
-        return count;
-    }
-
-    /**
-     * Job combiné : marque en retard les contrats EN_COURS dépassés 
-     * et annule les contrats EN_ATTENTE bloqués par ces retards.
-     * 
-     * Logique :
-     * 1. Passe EN_COURS → EN_RETARD si dateFin < today
-     * 2. Pour chaque contrat EN_RETARD, annule les EN_ATTENTE du même véhicule 
-     *    si dateDebut <= today (considérés comme bloqués)
-     */
-    public int markLateAndCancelBlocked() {
-        LocalDate today = LocalDate.now();
-        int totalModified = 0;
-        
-        // Étape 1 : Marquer en retard les contrats EN_COURS dépassés
-        List<Contrat> contratsEnCours = contratRepository.findByEtat(EtatContrat.EN_COURS);
-        for (Contrat contrat : contratsEnCours) {
-            if (contrat.getDateFin().isBefore(today)) {
-                contrat.markLate();
-                contratRepository.save(contrat);
-                totalModified++;
-                
-                // Étape 2 : Annuler les EN_ATTENTE bloqués sur le même véhicule
-                List<Contrat> awaitingForVehicle = contratRepository.findByVehiculeIdAndEtat(
-                    contrat.getVehiculeId(), 
-                    EtatContrat.EN_ATTENTE
-                );
-                
-                for (Contrat awaitingContrat : awaitingForVehicle) {
-                    // Considéré comme bloqué si dateDebut <= today
-                    if (!awaitingContrat.getDateDebut().isAfter(today)) {
-                        awaitingContrat.cancel();
-                        contratRepository.save(awaitingContrat);
-                        contractsCanceledByLateBlock.increment();
-                        totalModified++;
-                    }
-                }
-            }
-        }
-        
-        return totalModified;
-    }
-
-    /**
      * Récupère un contrat par ID.
      */
     @Transactional(readOnly = true)
@@ -239,14 +158,6 @@ public class ContratService {
     @Transactional(readOnly = true)
     public List<Contrat> findByCriteria(UUID clientId, UUID vehiculeId, EtatContrat etat) {
         return contratRepository.findByCriteria(clientId, vehiculeId, etat);
-    }
-
-    /**
-     * Recherche des contrats selon des critères optionnels avec pagination et tri.
-     */
-    @Transactional(readOnly = true)
-    public Page<Contrat> findByCriteria(UUID clientId, UUID vehiculeId, EtatContrat etat, Pageable pageable) {
-        return contratRepository.findByCriteria(clientId, vehiculeId, etat, pageable);
     }
 
     // === Helpers ===

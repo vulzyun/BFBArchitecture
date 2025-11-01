@@ -8,13 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Controller REST pour la gestion des contrats de location.
@@ -63,16 +63,17 @@ public class ContratController {
     }
 
     @GetMapping
-    @Operation(summary = "Rechercher des contrats", description = "Recherche par clientId, vehiculeId et/ou etat (tous optionnels) avec pagination et tri")
-    public ResponseEntity<Page<ContratDto>> search(
+    @Operation(summary = "Rechercher des contrats", description = "Recherche par clientId, vehiculeId et/ou etat (tous optionnels)")
+    public ResponseEntity<List<ContratDto>> search(
             @RequestParam(required = false) UUID clientId,
             @RequestParam(required = false) UUID vehiculeId,
-            @RequestParam(required = false) EtatContrat etat,
-            Pageable pageable
+            @RequestParam(required = false) EtatContrat etat
     ) {
-        Page<Contrat> contratsPage = contratService.findByCriteria(clientId, vehiculeId, etat, pageable);
-        Page<ContratDto> dtosPage = contratsPage.map(contratMapper::toDto);
-        return ResponseEntity.ok(dtosPage);
+        List<Contrat> contrats = contratService.findByCriteria(clientId, vehiculeId, etat);
+        List<ContratDto> dtos = contrats.stream()
+            .map(contratMapper::toDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @PatchMapping("/{id}/start")
@@ -120,4 +121,9 @@ public class ContratController {
             .status(HttpStatus.ACCEPTED)
             .body(new MarkLateResponse(count));
     }
+
+    /**
+     * DTO de réponse pour le job mark-late.
+     */
+    public record MarkLateResponse(int contratsMarkedLate) {}
 }
