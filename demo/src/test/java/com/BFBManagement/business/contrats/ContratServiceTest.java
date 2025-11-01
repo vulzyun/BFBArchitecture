@@ -313,4 +313,40 @@ class ContratServiceTest {
             contratService.start(contratId)
         );
     }
+
+    // ==================== Tests cancelPendingContractsForVehicle() ====================
+
+    @Test
+    void cancel_pending_when_vehicle_marked_down_cancels_only_EN_ATTENTE() {
+        // Given: 3 contrats même véhicule: A EN_ATTENTE, B EN_COURS, C EN_RETARD
+        UUID vehiculeId = UUID.randomUUID();
+        
+        Contrat contratA = new Contrat();
+        contratA.setId(UUID.randomUUID());
+        contratA.setVehiculeId(vehiculeId);
+        contratA.setEtat(EtatContrat.EN_ATTENTE);
+        
+        Contrat contratB = new Contrat();
+        contratB.setId(UUID.randomUUID());
+        contratB.setVehiculeId(vehiculeId);
+        contratB.setEtat(EtatContrat.EN_COURS);
+        
+        Contrat contratC = new Contrat();
+        contratC.setId(UUID.randomUUID());
+        contratC.setVehiculeId(vehiculeId);
+        contratC.setEtat(EtatContrat.EN_RETARD);
+        
+        when(contratRepository.findByVehiculeIdAndEtat(vehiculeId, EtatContrat.EN_ATTENTE))
+            .thenReturn(List.of(contratA));
+        when(contratRepository.save(any(Contrat.class))).thenAnswer(inv -> inv.getArgument(0));
+        
+        // When: cancelPendingContractsForVehicle(vehiculeId)
+        contratService.cancelPendingContractsForVehicle(vehiculeId);
+        
+        // Then: A→ANNULE, B et C inchangés
+        verify(contratRepository).save(argThat(c -> 
+            c.getId().equals(contratA.getId()) && c.getEtat() == EtatContrat.ANNULE
+        ));
+        verify(contratRepository, times(1)).save(any(Contrat.class));
+    }
 }
