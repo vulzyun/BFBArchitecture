@@ -1,5 +1,7 @@
 package com.BFBManagement.architecture.contrats.domain;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,5 +62,19 @@ public interface ContratRepository extends JpaRepository<Contrat, UUID> {
         @Param("clientId") UUID clientId,
         @Param("vehiculeId") UUID vehiculeId,
         @Param("etat") EtatContrat etat
+    );
+
+    /**
+     * Trouve les contrats selon des critères de recherche optionnels avec pagination.
+     */
+    @Query("SELECT c FROM Contrat c WHERE " +
+           "(:clientId IS NULL OR c.clientId = :clientId) AND " +
+           "(:vehiculeId IS NULL OR c.vehiculeId = :vehiculeId) AND " +
+           "(:etat IS NULL OR c.etat = :etat)")
+    Page<Contrat> findByCriteria(
+        @Param("clientId") UUID clientId,
+        @Param("vehiculeId") UUID vehiculeId,
+        @Param("etat") EtatContrat etat,
+        Pageable pageable
     );
 }

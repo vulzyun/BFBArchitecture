@@ -5,6 +5,8 @@ import com.BFBManagement.business.contrats.exceptions.*;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;
 import com.BFBManagement.business.vehicules.EtatVehicule;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -221,6 +223,14 @@ public class ContratService {
     @Transactional(readOnly = true)
     public List<Contrat> findByCriteria(UUID clientId, UUID vehiculeId, EtatContrat etat) {
         return contratRepository.findByCriteria(clientId, vehiculeId, etat);
+    }
+
+    /**
+     * Recherche des contrats selon des critères optionnels avec pagination et tri.
+     */
+    @Transactional(readOnly = true)
+    public Page<Contrat> findByCriteria(UUID clientId, UUID vehiculeId, EtatContrat etat, Pageable pageable) {
+        return contratRepository.findByCriteria(clientId, vehiculeId, etat, pageable);
     }
 
     // === Helpers ===
