@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 /**
  * Controller REST interne pour gérer les événements liés aux véhicules.
  * Ces endpoints sont destinés à être appelés par d'autres services internes.
@@ -40,14 +38,4 @@ public class VehicleEventsController {
             .status(HttpStatus.ACCEPTED)
             .body(new VehicleMarkedDownResponse(request.vehiculeId(), canceledCount));
     }
-
-    /**
-     * DTO de requête pour l'événement "véhicule en panne".
-     */
-    public record VehicleMarkedDownRequest(UUID vehiculeId) {}
-
-    /**
-     * DTO de réponse pour l'événement "véhicule en panne".
-     */
-    public record VehicleMarkedDownResponse(UUID vehiculeId, int contractsCanceled) {}
 }

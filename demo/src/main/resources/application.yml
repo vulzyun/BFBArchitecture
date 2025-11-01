@@ -26,7 +26,7 @@ spring:
   # Configuration Swagger/OpenAPI
   springdoc:
     api-docs:
-      path: /api-docs
+      path: /v3/api-docs
     swagger-ui:
       path: /swagger-ui.html
       enabled: true
@@ -47,6 +47,11 @@ management:
 # Logging
 logging:
   level:
-    com.BFBManagement: DEBUG
+    com.BFBManagement: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Server
+server:
+  error:
+    include-message: always
+    include-binding-errors: always

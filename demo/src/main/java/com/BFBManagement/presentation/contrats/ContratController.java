@@ -14,9 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Controller REST pour la gestion des contrats de location.
@@ -122,9 +120,4 @@ public class ContratController {
             .status(HttpStatus.ACCEPTED)
             .body(new MarkLateResponse(count));
     }
-
-    /**
-     * DTO de réponse pour le job mark-late.
-     */
-    public record MarkLateResponse(int contratsMarkedLate) {}
 }
