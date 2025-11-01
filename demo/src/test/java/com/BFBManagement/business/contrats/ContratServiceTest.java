@@ -7,10 +7,11 @@ import com.BFBManagement.business.contrats.exceptions.*;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;
 import com.BFBManagement.business.vehicules.EtatVehicule;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -39,7 +40,7 @@ class ContratServiceTest {
     @Mock
     private ClientExistencePort clientExistencePort;
 
-    @InjectMocks
+    private MeterRegistry meterRegistry;
     private ContratService contratService;
 
     private UUID clientId;
@@ -49,6 +50,14 @@ class ContratServiceTest {
 
     @BeforeEach
     void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+        contratService = new ContratService(
+            contratRepository,
+            vehicleStatusPort,
+            clientExistencePort,
+            meterRegistry
+        );
+        
         clientId = UUID.randomUUID();
         vehiculeId = UUID.randomUUID();
         dateDebut = LocalDate.of(2025, 12, 1);
