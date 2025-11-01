@@ -5,6 +5,8 @@ import com.BFBManagement.business.contrats.exceptions.*;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;
 import com.BFBManagement.business.vehicules.EtatVehicule;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,14 +27,26 @@ public class ContratService {
     private final ContratRepository contratRepository;
     private final VehicleStatusPort vehicleStatusPort;
     private final ClientExistencePort clientExistencePort;
+    private final Counter contractsCanceledByVehicleDown;
+    private final Counter contractsCanceledByLateBlock;
 
     public ContratService(
             ContratRepository contratRepository,
             VehicleStatusPort vehicleStatusPort,
-            ClientExistencePort clientExistencePort) {
+            ClientExistencePort clientExistencePort,
+            MeterRegistry meterRegistry) {
         this.contratRepository = contratRepository;
         this.vehicleStatusPort = vehicleStatusPort;
         this.clientExistencePort = clientExistencePort;
+        
+        // Initialiser les compteurs de métriques métier
+        this.contractsCanceledByVehicleDown = Counter.builder("contracts.canceled.byVehicleDown")
+            .description("Nombre de contrats annulés suite à une panne de véhicule")
+            .register(meterRegistry);
+        
+        this.contractsCanceledByLateBlock = Counter.builder("contracts.canceled.byLateBlock")
+            .description("Nombre de contrats annulés car bloqués par un retard")
+            .register(meterRegistry);
     }
 
     /**
@@ -161,6 +175,7 @@ public class ContratService {
             if (contrat.getEtat() == EtatContrat.EN_ATTENTE) {
                 contrat.cancel();
                 contratRepository.save(contrat);
+                contractsCanceledByVehicleDown.increment();
                 count++;
             }
         }
@@ -200,6 +215,7 @@ public class ContratService {
                     if (!awaitingContrat.getDateDebut().isAfter(today)) {
                         awaitingContrat.cancel();
                         contratRepository.save(awaitingContrat);
+                        contractsCanceledByLateBlock.increment();
                         totalModified++;
                     }
                 }
