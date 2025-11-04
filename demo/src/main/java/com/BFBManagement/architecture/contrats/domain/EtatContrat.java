@@ -2,6 +2,13 @@ package com.BFBManagement.architecture.contrats.domain;
 
 /**
  * États possibles d'un contrat de location.
+ * 
+ * Machine à états avec transitions contrôlées :
+ * - EN_ATTENTE → EN_COURS (start)
+ * - EN_ATTENTE → ANNULE (cancel)
+ * - EN_COURS → TERMINE (terminate)
+ * - EN_COURS → EN_RETARD (markLate - automatique)
+ * - EN_RETARD → TERMINE (terminate)
  */
 public enum EtatContrat {
     /**

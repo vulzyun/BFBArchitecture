@@ -1,5 +1,6 @@
 package com.BFBManagement.architecture.contrats.domain;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -7,6 +8,7 @@ import java.util.UUID;
 /**
  * Entité JPA représentant un contrat de location.
  */
+@Hidden
 @Entity
 @Table(name = "contrats", indexes = {
     @Index(name = "idx_vehicule_dates", columnList = "vehicule_id, date_debut, date_fin"),

@@ -22,6 +22,11 @@ public interface ContratRepository extends JpaRepository<Contrat, UUID> {
     List<Contrat> findByVehiculeIdAndEtatIn(UUID vehiculeId, List<EtatContrat> etats);
     
     /**
+     * Trouve tous les contrats d'un véhicule ayant un état spécifique.
+     */
+    List<Contrat> findByVehiculeIdAndEtat(UUID vehiculeId, EtatContrat etat);
+    
+    /**
      * Trouve les contrats "occupants" d'un véhicule qui chevauchent une période donnée.
      * Utilisé pour détecter les conflits avant création/modification.
      * 

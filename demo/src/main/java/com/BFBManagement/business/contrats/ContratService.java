@@ -145,6 +145,29 @@ public class ContratService {
     }
 
     /**
+     * Annule tous les contrats EN_ATTENTE pour un véhicule donné.
+     * Utilisé lorsqu'un véhicule tombe en panne.
+     * 
+     * @param vehiculeId L'ID du véhicule
+     * @return Le nombre de contrats annulés
+     */
+    public int cancelPendingContractsForVehicle(UUID vehiculeId) {
+        List<Contrat> pendingContrats = contratRepository.findByVehiculeIdAndEtat(
+            vehiculeId, 
+            EtatContrat.EN_ATTENTE
+        );
+        
+        int count = 0;
+        for (Contrat contrat : pendingContrats) {
+            contrat.cancel();
+            contratRepository.save(contrat);
+            count++;
+        }
+        
+        return count;
+    }
+
+    /**
      * Récupère un contrat par ID.
      */
     @Transactional(readOnly = true)

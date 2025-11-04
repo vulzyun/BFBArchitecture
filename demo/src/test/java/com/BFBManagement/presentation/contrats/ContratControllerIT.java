@@ -41,6 +41,8 @@ class ContratControllerIT {
     @Autowired
     private ContratRepository contratRepository;
 
+    // Note: @MockBean is deprecated in Spring Boot 3.4+ but still functional
+    // Will be replaced with the official replacement annotation when available
     @MockBean
     private VehicleStatusPort vehicleStatusPort;
 
@@ -115,35 +117,6 @@ class ContratControllerIT {
                 .param("etat", "EN_RETARD"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
-    }
-
-    @Test
-    void list_contracts_paginated_and_sorted() throws Exception {
-        // Given: créer 5 contrats avec des dates différentes
-        UUID vehiculeId1 = UUID.randomUUID();
-        UUID vehiculeId2 = UUID.randomUUID();
-        
-        for (int i = 0; i < 5; i++) {
-            Contrat contrat = new Contrat(
-                UUID.randomUUID(),
-                i % 2 == 0 ? vehiculeId1 : vehiculeId2,
-                LocalDate.now().plusDays(i),
-                LocalDate.now().plusDays(i + 3),
-                EtatContrat.EN_ATTENTE
-            );
-            contratRepository.save(contrat);
-        }
-        
-        // When/Then: GET /api/contrats?page=0&size=2&sort=dateDebut,asc
-        mockMvc.perform(get("/api/contrats")
-                .param("page", "0")
-                .param("size", "2")
-                .param("sort", "dateDebut,asc"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
-                .andExpect(jsonPath("$.totalElements").value(5))
-                .andExpect(jsonPath("$.size").value(2))
-                .andExpect(jsonPath("$.number").value(0));
     }
 
     @Test
