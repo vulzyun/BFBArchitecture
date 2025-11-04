@@ -1,6 +1,6 @@
 package com.BFBManagement.presentation.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.Contrat;
+import com.BFBManagement.infrastructure.contrats.domain.Contrat;
 import org.springframework.stereotype.Component;
 
 /**

@@ -1,4 +1,4 @@
-package com.BFBManagement.architecture.contrats.domain;
+package com.BFBManagement.infrastructure.contrats.domain;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

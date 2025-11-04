@@ -1,6 +1,6 @@
 package com.BFBManagement.presentation.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.EtatContrat;
+import com.BFBManagement.infrastructure.contrats.domain.EtatContrat;
 import java.time.LocalDate;
 import java.util.UUID;
 

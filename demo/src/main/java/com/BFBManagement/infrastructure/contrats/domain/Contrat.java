@@ -1,4 +1,4 @@
-package com.BFBManagement.architecture.contrats.domain;
+package com.BFBManagement.infrastructure.contrats.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;

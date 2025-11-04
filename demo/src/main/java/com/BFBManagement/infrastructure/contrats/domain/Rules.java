@@ -1,4 +1,4 @@
-package com.BFBManagement.architecture.contrats.domain;
+package com.BFBManagement.infrastructure.contrats.domain;
 
 import java.time.LocalDate;
 import java.util.Set;
