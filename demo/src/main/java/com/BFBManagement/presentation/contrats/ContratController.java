@@ -1,7 +1,7 @@
 package com.BFBManagement.presentation.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.Contrat;
-import com.BFBManagement.architecture.contrats.domain.EtatContrat;
+import com.BFBManagement.infrastructure.contrats.domain.Contrat;
+import com.BFBManagement.infrastructure.contrats.domain.EtatContrat;
 import com.BFBManagement.business.contrats.ContratService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

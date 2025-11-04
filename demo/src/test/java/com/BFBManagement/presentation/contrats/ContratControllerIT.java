@@ -1,8 +1,8 @@
 package com.BFBManagement.presentation.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.Contrat;
-import com.BFBManagement.architecture.contrats.domain.ContratRepository;
-import com.BFBManagement.architecture.contrats.domain.EtatContrat;
+import com.BFBManagement.infrastructure.contrats.domain.Contrat;
+import com.BFBManagement.infrastructure.contrats.domain.ContratRepository;
+import com.BFBManagement.infrastructure.contrats.domain.EtatContrat;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;
 import com.BFBManagement.business.vehicules.EtatVehicule;

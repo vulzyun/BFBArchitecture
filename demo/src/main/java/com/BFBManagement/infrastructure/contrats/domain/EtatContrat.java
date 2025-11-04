@@ -1,4 +1,4 @@
-package com.BFBManagement.architecture.contrats.domain;
+package com.BFBManagement.infrastructure.contrats.domain;
 
 /**
  * États possibles d'un contrat de location.

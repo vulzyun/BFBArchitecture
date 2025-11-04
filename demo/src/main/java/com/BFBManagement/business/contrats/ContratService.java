@@ -1,6 +1,6 @@
 package com.BFBManagement.business.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.*;
+import com.BFBManagement.infrastructure.contrats.domain.*;
 import com.BFBManagement.business.contrats.exceptions.*;
 import com.BFBManagement.business.contrats.ports.ClientExistencePort;
 import com.BFBManagement.business.contrats.ports.VehicleStatusPort;

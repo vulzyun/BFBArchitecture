@@ -1,4 +1,4 @@
-package com.BFBManagement.architecture.contrats.domain;
+package com.BFBManagement.infrastructure.contrats.domain;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.*;

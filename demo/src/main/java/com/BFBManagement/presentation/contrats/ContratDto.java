@@ -1,6 +1,6 @@
 package com.BFBManagement.presentation.contrats;
 
-import com.BFBManagement.architecture.contrats.domain.EtatContrat;
+import com.BFBManagement.infrastructure.contrats.domain.EtatContrat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.UUID;
