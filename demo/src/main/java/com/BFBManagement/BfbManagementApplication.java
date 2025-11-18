@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {
-	"com.BFBManagement.domain",
-	"com.BFBManagement.application",
-	"com.BFBManagement.adapters"
+	"com.BFBManagement.business",
+	"com.BFBManagement.infrastructures",
+	"com.BFBManagement.interfaces"
 })
 public class BfbManagementApplication {
 
