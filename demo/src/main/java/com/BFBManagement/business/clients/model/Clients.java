@@ -4,29 +4,29 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public class Clients {
-    private UUID id; 
-    private String nom;
+    private UUID clientId; 
     private String prenom;
+    private String nom;
     private String adresse;
     private String numPermis;
     private LocalDate dateNaissance;
 
     // Constructeurs
-    public Clients(UUID id, String nom, String prenom, String adresse, String numPermis, LocalDate dateNaissance) {
-        this.id = id;
-        this.nom = nom;
+    public Clients(UUID clientId, String prenom, String nom,String adresse,String numPermis, LocalDate dateNaissance) {
+        this.clientId = clientId;
         this.prenom = prenom;
+        this.nom = nom;
         this.adresse = adresse;
         this.numPermis = numPermis;
         this.dateNaissance = dateNaissance;
     }
 
     public UUID getId() {
-        return id;
+        return clientId;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setId(UUID clientId) {
+        this.clientId = clientId;
     }
 
     public String getNom() {
@@ -60,7 +60,4 @@ public class Clients {
         this.dateNaissance = dateNaissance;
     }
 
-    public static Clients create(String nom, String prenom, String adresse, String numPermis, LocalDate dateNaissance) {
-        return new Clients(UUID.randomUUID(), nom, prenom, adresse, numPermis, dateNaissance);
-    }
 }

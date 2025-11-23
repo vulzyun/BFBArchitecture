@@ -49,9 +49,10 @@ public class ClientsJpaEntity {
         this.clientId = clientId;
         this.prenom = prenom;
         this.nom = nom;
+        this.adresse = adresse;
         this.dateNaissance = dateNaissance;
         this.numPermis = numPermis;
-        this.adresse = adresse;
+
     }
 
     // Getters et Setters
@@ -61,6 +62,13 @@ public class ClientsJpaEntity {
 
     public void setId(UUID id) {
         this.clientId = clientId;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+    public void setNom(String nom) {
+        this.nom = nom;
     }
 
 
@@ -80,11 +88,19 @@ public class ClientsJpaEntity {
         this.dateNaissance = dateNaissance;
     }
 
-    public String getNumPermis(String numPermis) {
+    public String getNumPermis() {
         return numPermis;
     }
 
     public void setNumPermis(String numPermis) {
         this.numPermis = numPermis;
+    }
+
+    public String getAdresse() {
+        return adresse;
+    }
+
+    public void setAdresse(String adresse) {
+        this.adresse = adresse;
     }
 }
