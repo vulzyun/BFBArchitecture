@@ -3,26 +3,25 @@ package com.BFBManagement.infrastructures.bdd.clients;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.BFBManagement.business.contrats.model.EtatContrat;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 /**
- * Entité JPA représentant un client
+ * Entité JPA représentant un client (permet à spring de faire le mapping avec la table clients en base de données).
  */
 
 @Hidden
 @Entity
 @Table(name = "clients", indexes = {
-    @Index(name = "idx_client", columnList = "client_id, prenom, nom, date_naissance, num_permis, adresse")
+    @Index(name = "client_id", columnList = "client_id, prenom, nom, date_naissance, num_permis, adresse")
 })
 public class ClientsJpaEntity {
 
-
+    @Id
     @Column(name = "client_id", nullable = false)
     private UUID clientId;
 
@@ -87,13 +86,5 @@ public class ClientsJpaEntity {
 
     public void setNumPermis(String numPermis) {
         this.numPermis = numPermis;
-    }
-
-    public EtatContrat getEtat() {
-        return etat;
-    }
-
-    public void setEtat(EtatContrat etat) {
-        this.etat = etat;
     }
 }
