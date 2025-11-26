@@ -1,4 +1,7 @@
 package com.BFBManagement.infrastructures.bdd.clients;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
 import com.BFBManagement.business.clients.model.Clients;
@@ -28,6 +31,23 @@ public class ClientsBddService {
         return jpaRepository.findById(id)
             .map(mapper::toDomain)
             .orElse(null);
+    }
+
+    public Collection<Clients> findAll() {
+        return jpaRepository.findAll()
+            .stream()
+            .map(mapper::toDomain) 
+            .collect(Collectors.toList());
+    }
+
+    public Clients update(Clients client) {
+        ClientsJpaEntity entity = mapper.toEntity(client);
+        ClientsJpaEntity updated = jpaRepository.save(entity);
+        return mapper.toDomain(updated);
+    }
+
+    public void deleteById(java.util.UUID id) {
+        jpaRepository.deleteById(id);
     }
     
 
