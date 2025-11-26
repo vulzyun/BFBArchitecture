@@ -32,8 +32,6 @@ public class ClientsBddMapper {
         entity.setAdresse(domain.getAdresse());
         entity.setNumPermis(domain.getNumPermis());
         entity.setDateNaissance(domain.getDateNaissance());
-
-
         return entity;
     }
 }
