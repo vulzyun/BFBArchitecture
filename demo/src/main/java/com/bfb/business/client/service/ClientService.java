@@ -70,7 +70,7 @@ public class ClientService {
     }
 
     public void delete(UUID id) {
-        if (!clientRepository.findById(id).isPresent()) {
+        if (!clientRepository.existsById(id)) {
             throw new ClientNotFoundException(
                 String.format("Client %s not found", id)
             );

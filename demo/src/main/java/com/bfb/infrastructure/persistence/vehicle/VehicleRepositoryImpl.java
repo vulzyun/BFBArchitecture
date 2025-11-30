@@ -69,6 +69,11 @@ public class VehicleRepositoryImpl implements VehicleRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public boolean existsById(UUID id) {
+        return jpaRepository.existsById(id);
+    }
+
     // Mapping methods
     private VehicleEntity toEntity(Vehicle vehicle) {
         return new VehicleEntity(

@@ -21,4 +21,5 @@ public interface VehicleRepository {
     List<Vehicle> findByStatus(VehicleStatus status);
     Page<Vehicle> findByStatus(VehicleStatus status, Pageable pageable);
     void deleteById(UUID id);
+    boolean existsById(UUID id);
 }

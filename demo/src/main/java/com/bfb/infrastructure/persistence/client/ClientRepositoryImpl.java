@@ -59,6 +59,11 @@ public class ClientRepositoryImpl implements ClientRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public boolean existsById(UUID id) {
+        return jpaRepository.existsById(id);
+    }
+
     // Mapping methods
     private ClientEntity toEntity(Client client) {
         return new ClientEntity(

@@ -72,7 +72,7 @@ public class VehicleService {
     }
 
     public void delete(UUID id) {
-        if (!vehicleRepository.findById(id).isPresent()) {
+        if (!vehicleRepository.existsById(id)) {
             throw new VehicleNotFoundException(
                 String.format("Vehicle %s not found", id)
             );
