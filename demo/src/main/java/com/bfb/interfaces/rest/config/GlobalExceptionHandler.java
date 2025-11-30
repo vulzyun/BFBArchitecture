@@ -9,9 +9,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
 
+import static com.bfb.interfaces.rest.config.ApiConstants.ErrorMessages;
+import static com.bfb.interfaces.rest.config.ApiConstants.ErrorTitles;
+import static com.bfb.interfaces.rest.config.ApiConstants.ErrorTypes;
+
 /**
  * Global exception handler for all REST controllers.
- * Maps business exceptions to appropriate HTTP codes.
+ * Maps business exceptions to appropriate HTTP codes using RFC 7807 Problem Details.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,8 +30,8 @@ public class GlobalExceptionHandler {
             HttpStatus.NOT_FOUND, 
             ex.getMessage()
         );
-        problemDetail.setTitle("Resource not found");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/not-found"));
+        problemDetail.setTitle(ErrorTitles.NOT_FOUND);
+        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
         return problemDetail;
     }
 
@@ -37,8 +41,8 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST, 
             ex.getMessage()
         );
-        problemDetail.setTitle("Validation failed");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/validation"));
+        problemDetail.setTitle(ErrorTitles.VALIDATION_FAILED);
+        problemDetail.setType(URI.create(ErrorTypes.VALIDATION));
         return problemDetail;
     }
 
@@ -54,8 +58,8 @@ public class GlobalExceptionHandler {
             HttpStatus.BAD_REQUEST, 
             "Validation errors: " + errors
         );
-        problemDetail.setTitle("Parameter validation failed");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/validation"));
+        problemDetail.setTitle(ErrorTitles.PARAMETER_VALIDATION_FAILED);
+        problemDetail.setType(URI.create(ErrorTypes.VALIDATION));
         return problemDetail;
     }
 
@@ -70,8 +74,8 @@ public class GlobalExceptionHandler {
             HttpStatus.CONFLICT, 
             ex.getMessage()
         );
-        problemDetail.setTitle("Business conflict");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/conflict"));
+        problemDetail.setTitle(ErrorTitles.BUSINESS_CONFLICT);
+        problemDetail.setType(URI.create(ErrorTypes.CONFLICT));
         return problemDetail;
     }
 
@@ -81,8 +85,8 @@ public class GlobalExceptionHandler {
             HttpStatus.UNPROCESSABLE_ENTITY, 
             ex.getMessage()
         );
-        problemDetail.setTitle("State transition not allowed");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/transition-not-allowed"));
+        problemDetail.setTitle(ErrorTitles.TRANSITION_NOT_ALLOWED);
+        problemDetail.setType(URI.create(ErrorTypes.TRANSITION_NOT_ALLOWED));
         return problemDetail;
     }
 
@@ -90,10 +94,10 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleGenericException(Exception ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.INTERNAL_SERVER_ERROR, 
-            "An internal error occurred"
+            ErrorMessages.INTERNAL_ERROR
         );
-        problemDetail.setTitle("Internal error");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/internal"));
+        problemDetail.setTitle(ErrorTitles.INTERNAL_ERROR);
+        problemDetail.setType(URI.create(ErrorTypes.INTERNAL_ERROR));
         return problemDetail;
     }
 }
