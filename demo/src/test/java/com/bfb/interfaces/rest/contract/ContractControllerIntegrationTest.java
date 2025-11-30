@@ -33,12 +33,38 @@ class ContractControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private UUID clientId;
+    private UUID vehicleId;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        // Create a test client
+        String clientResponse = mockMvc.perform(post("/api/clients")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Test Client\",\"email\":\"test" + System.nanoTime() + "@example.com\"}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        clientId = UUID.fromString(objectMapper.readTree(clientResponse).get("id").asText());
+
+        // Create a test vehicle
+        String vehicleResponse = mockMvc.perform(post("/api/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"brand\":\"Toyota\",\"model\":\"Corolla\"}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        vehicleId = UUID.fromString(objectMapper.readTree(vehicleResponse).get("id").asText());
+    }
+
     @Test
     void createContract_Success() throws Exception {
         // Given
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -89,12 +115,11 @@ class ContractControllerIntegrationTest {
     @Test
     void createContract_OverlappingDates_ReturnsConflict() throws Exception {
         // Given - create first contract
-        UUID vehicleId = UUID.randomUUID();
         LocalDate startDate = LocalDate.now().plusDays(1);
         LocalDate endDate = LocalDate.now().plusDays(8);
         
         CreateContractRequest request1 = new CreateContractRequest(
-            UUID.randomUUID(),
+            clientId,
             vehicleId,
             startDate,
             endDate
@@ -107,7 +132,7 @@ class ContractControllerIntegrationTest {
 
         // When - create overlapping contract
         CreateContractRequest request2 = new CreateContractRequest(
-            UUID.randomUUID(),
+            clientId,
             vehicleId,
             startDate.plusDays(2),
             endDate.plusDays(2)
@@ -126,8 +151,8 @@ class ContractControllerIntegrationTest {
     void getContractById_Success() throws Exception {
         // Given - create a contract first
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -157,15 +182,15 @@ class ContractControllerIntegrationTest {
         // When & Then
         mockMvc.perform(get("/api/contracts/{id}", nonExistentId))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.title").value("Contract not found"));
+            .andExpect(jsonPath("$.title").value("Resource not found"));
     }
 
     @Test
     void startContract_Success() throws Exception {
         // Given - create a pending contract
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -190,8 +215,8 @@ class ContractControllerIntegrationTest {
     void startContract_AlreadyStarted_ReturnsUnprocessableEntity() throws Exception {
         // Given - create and start a contract
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -220,8 +245,8 @@ class ContractControllerIntegrationTest {
     void terminateContract_Success() throws Exception {
         // Given - create and start a contract
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -249,8 +274,8 @@ class ContractControllerIntegrationTest {
     void cancelContract_Success() throws Exception {
         // Given - create a pending contract
         CreateContractRequest request = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
@@ -275,14 +300,25 @@ class ContractControllerIntegrationTest {
     void searchContracts_WithoutFilters_ReturnsAllContracts() throws Exception {
         // Given - create multiple contracts
         CreateContractRequest request1 = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
+        
+        // Create another vehicle for second contract
+        String vehicle2Response = mockMvc.perform(post("/api/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"brand\":\"Honda\",\"model\":\"Civic\"}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        UUID vehicleId2 = UUID.fromString(objectMapper.readTree(vehicle2Response).get("id").asText());
+        
         CreateContractRequest request2 = new CreateContractRequest(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            clientId,
+            vehicleId2,
             LocalDate.now().plusDays(10),
             LocalDate.now().plusDays(15)
         );
@@ -307,17 +343,24 @@ class ContractControllerIntegrationTest {
     @Test
     void searchContracts_WithStatusFilter() throws Exception {
         // Given - create contracts with different statuses
-        UUID vehicleId1 = UUID.randomUUID();
-        UUID vehicleId2 = UUID.randomUUID();
+        // Create another vehicle for second contract
+        String vehicle2Response = mockMvc.perform(post("/api/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"brand\":\"Honda\",\"model\":\"Accord\"}"))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        UUID vehicleId2 = UUID.fromString(objectMapper.readTree(vehicle2Response).get("id").asText());
         
         CreateContractRequest request1 = new CreateContractRequest(
-            UUID.randomUUID(),
-            vehicleId1,
+            clientId,
+            vehicleId,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
         CreateContractRequest request2 = new CreateContractRequest(
-            UUID.randomUUID(),
+            clientId,
             vehicleId2,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)

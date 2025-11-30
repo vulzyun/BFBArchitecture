@@ -16,14 +16,18 @@ import java.net.URI;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ContractNotFoundException.class)
-    public ProblemDetail handleContractNotFound(ContractNotFoundException ex) {
+    @ExceptionHandler({
+        ContractNotFoundException.class,
+        com.bfb.business.vehicle.exception.VehicleNotFoundException.class,
+        com.bfb.business.client.exception.ClientNotFoundException.class
+    })
+    public ProblemDetail handleNotFound(RuntimeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.NOT_FOUND, 
             ex.getMessage()
         );
-        problemDetail.setTitle("Contract not found");
-        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/contract-not-found"));
+        problemDetail.setTitle("Resource not found");
+        problemDetail.setType(URI.create("https://bfbmanagement.com/errors/not-found"));
         return problemDetail;
     }
 
@@ -55,7 +59,12 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-    @ExceptionHandler({OverlapException.class, VehicleUnavailableException.class, ClientUnknownException.class})
+    @ExceptionHandler({
+        OverlapException.class, 
+        VehicleUnavailableException.class, 
+        ClientUnknownException.class,
+        com.bfb.business.client.exception.DuplicateEmailException.class
+    })
     public ProblemDetail handleConflict(RuntimeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.CONFLICT, 
