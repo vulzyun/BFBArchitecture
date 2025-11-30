@@ -3,6 +3,7 @@ package com.bfb.interfaces.rest.contract;
 import com.bfb.business.contract.model.Contract;
 import com.bfb.business.contract.model.ContractStatus;
 import com.bfb.business.contract.service.ContractService;
+import com.bfb.interfaces.rest.common.BaseRestController;
 import com.bfb.interfaces.rest.contract.dto.ContractDto;
 import com.bfb.interfaces.rest.contract.dto.CreateContractRequest;
 import com.bfb.interfaces.rest.contract.dto.MarkLateResponse;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,11 +20,12 @@ import java.util.UUID;
 
 /**
  * REST controller for contract management.
+ * Extends BaseRestController for consistent response handling.
  */
 @RestController
 @RequestMapping("/api/v1/contracts")
 @Tag(name = "Contracts", description = "Contract management API (v1)")
-public class ContractController {
+public class ContractController extends BaseRestController<Contract, ContractDto> {
 
     private final ContractService contractService;
     private final ContractMapper contractMapper;
@@ -61,9 +62,7 @@ public class ContractController {
             dto.startDate(),
             dto.endDate()
         );
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(contractMapper.toDto(contract));
+        return created(contractMapper.toDto(contract));
     }
 
     @GetMapping("/{id}")
@@ -77,7 +76,7 @@ public class ContractController {
     })
     public ResponseEntity<ContractDto> getById(@PathVariable UUID id) {
         Contract contract = contractService.findById(id);
-        return ResponseEntity.ok(contractMapper.toDto(contract));
+        return ok(contractMapper.toDto(contract));
     }
 
     @GetMapping
@@ -121,7 +120,7 @@ public class ContractController {
             clientId, vehicleId, status, pageable
         );
         org.springframework.data.domain.Page<ContractDto> dtos = contracts.map(contractMapper::toDto);
-        return ResponseEntity.ok(dtos);
+        return okPage(dtos);
     }
 
     @PatchMapping("/{id}/start")
@@ -141,7 +140,7 @@ public class ContractController {
     })
     public ResponseEntity<ContractDto> start(@PathVariable UUID id) {
         Contract contract = contractService.start(id);
-        return ResponseEntity.ok(contractMapper.toDto(contract));
+        return ok(contractMapper.toDto(contract));
     }
 
     @PatchMapping("/{id}/terminate")
@@ -161,7 +160,7 @@ public class ContractController {
     })
     public ResponseEntity<ContractDto> terminate(@PathVariable UUID id) {
         Contract contract = contractService.terminate(id);
-        return ResponseEntity.ok(contractMapper.toDto(contract));
+        return ok(contractMapper.toDto(contract));
     }
 
     @PatchMapping("/{id}/cancel")
@@ -181,7 +180,7 @@ public class ContractController {
     })
     public ResponseEntity<ContractDto> cancel(@PathVariable UUID id) {
         Contract contract = contractService.cancel(id);
-        return ResponseEntity.ok(contractMapper.toDto(contract));
+        return ok(contractMapper.toDto(contract));
     }
 
     @PostMapping("/jobs/mark-late")
@@ -204,8 +203,6 @@ public class ContractController {
     )
     public ResponseEntity<MarkLateResponse> markLate() {
         int count = contractService.markLateIfOverdue();
-        return ResponseEntity
-            .status(HttpStatus.ACCEPTED)
-            .body(new MarkLateResponse(count));
+        return ResponseEntity.accepted().body(new MarkLateResponse(count));
     }
 }

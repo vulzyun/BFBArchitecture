@@ -4,10 +4,11 @@ import com.bfb.business.client.model.Client;
 import com.bfb.business.client.service.ClientService;
 import com.bfb.interfaces.rest.client.dto.ClientDto;
 import com.bfb.interfaces.rest.client.dto.CreateClientRequest;
+import com.bfb.interfaces.rest.client.mapper.ClientMapper;
+import com.bfb.interfaces.rest.common.BaseRestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,32 +16,33 @@ import java.util.UUID;
 
 /**
  * REST controller for client management.
+ * Extends BaseRestController for consistent response handling.
  */
 @RestController
 @RequestMapping("/api/v1/clients")
 @Tag(name = "Clients", description = "Client management API (v1)")
-public class ClientController {
+public class ClientController extends BaseRestController<Client, ClientDto> {
 
     private final ClientService clientService;
+    private final ClientMapper clientMapper;
 
-    public ClientController(ClientService clientService) {
+    public ClientController(ClientService clientService, ClientMapper clientMapper) {
         this.clientService = clientService;
+        this.clientMapper = clientMapper;
     }
 
     @PostMapping
     @Operation(summary = "Create a new client")
     public ResponseEntity<ClientDto> create(@Valid @RequestBody CreateClientRequest request) {
         Client client = clientService.create(request.name(), request.email());
-        return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(toDto(client));
+        return created(clientMapper.toDto(client));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get client by ID")
     public ResponseEntity<ClientDto> getById(@PathVariable UUID id) {
         Client client = clientService.findById(id);
-        return ResponseEntity.ok(toDto(client));
+        return ok(clientMapper.toDto(client));
     }
 
     @GetMapping
@@ -56,8 +58,8 @@ public class ClientController {
         org.springframework.data.domain.Pageable pageable
     ) {
         org.springframework.data.domain.Page<Client> clients = clientService.findAll(pageable);
-        org.springframework.data.domain.Page<ClientDto> dtos = clients.map(this::toDto);
-        return ResponseEntity.ok(dtos);
+        org.springframework.data.domain.Page<ClientDto> dtos = clients.map(clientMapper::toDto);
+        return okPage(dtos);
     }
 
     @PutMapping("/{id}")
@@ -67,21 +69,13 @@ public class ClientController {
         @Valid @RequestBody CreateClientRequest request
     ) {
         Client client = clientService.update(id, request.name(), request.email());
-        return ResponseEntity.ok(toDto(client));
+        return ok(clientMapper.toDto(client));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a client")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         clientService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    private ClientDto toDto(Client client) {
-        return new ClientDto(
-            client.getId(),
-            client.getName(),
-            client.getEmail()
-        );
+        return noContent();
     }
 }
