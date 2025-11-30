@@ -44,6 +44,16 @@ public class VehicleService {
         return vehicleRepository.findByStatus(status);
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Vehicle> findByStatus(VehicleStatus status, org.springframework.data.domain.Pageable pageable) {
+        return vehicleRepository.findByStatus(status, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Vehicle> findAll(org.springframework.data.domain.Pageable pageable) {
+        return vehicleRepository.findAll(pageable);
+    }
+
     public VehicleStatus getStatus(UUID vehicleId) {
         Vehicle vehicle = findById(vehicleId);
         return vehicle.getStatus();

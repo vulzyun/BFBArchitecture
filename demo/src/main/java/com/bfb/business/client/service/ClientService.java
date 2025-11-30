@@ -46,8 +46,12 @@ public class ClientService {
         return clientRepository.findAll();
     }
 
-    public boolean exists(UUID clientId) {
-        return clientRepository.findById(clientId).isPresent();
+    public org.springframework.data.domain.Page<Client> findAll(org.springframework.data.domain.Pageable pageable) {
+        return clientRepository.findAll(pageable);
+    }
+
+    public boolean exists(UUID id) {
+        return clientRepository.findById(id).isPresent();
     }
 
     public Client update(UUID id, String name, String email) {

@@ -1,6 +1,9 @@
+package com.bfb.infrastructure.persistence.client;
 
 import com.bfb.business.client.model.Client;
 import com.bfb.business.client.service.ClientRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -38,6 +41,12 @@ public class ClientRepositoryImpl implements ClientRepository {
             .stream()
             .map(this::toDomain)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Client> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable)
+            .map(this::toDomain);
     }
 
     @Override

@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for vehicle management.
@@ -47,16 +45,22 @@ public class VehicleController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all vehicles", description = "Retrieves the list of all vehicles")
-    public ResponseEntity<List<VehicleDto>> getAll(
-        @RequestParam(required = false) VehicleStatus status
+    @Operation(
+        summary = "Get all vehicles", 
+        description = "Retrieves the list of all vehicles with pagination support. Use ?page=0&size=20&sort=brand,asc for pagination."
+    )
+    public ResponseEntity<org.springframework.data.domain.Page<VehicleDto>> getAll(
+        @RequestParam(required = false) VehicleStatus status,
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "Pagination parameters (page, size, sort)",
+            example = "page=0&size=20&sort=brand,asc"
+        )
+        org.springframework.data.domain.Pageable pageable
     ) {
-        List<Vehicle> vehicles = status != null 
-            ? vehicleService.findByStatus(status)
-            : vehicleService.findAll();
-        List<VehicleDto> dtos = vehicles.stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
+        org.springframework.data.domain.Page<Vehicle> vehicles = status != null 
+            ? vehicleService.findByStatus(status, pageable)
+            : vehicleService.findAll(pageable);
+        org.springframework.data.domain.Page<VehicleDto> dtos = vehicles.map(this::toDto);
         return ResponseEntity.ok(dtos);
     }
 

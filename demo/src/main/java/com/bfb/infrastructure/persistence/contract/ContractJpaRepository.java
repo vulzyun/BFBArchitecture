@@ -1,6 +1,8 @@
 package com.bfb.infrastructure.persistence.contract;
 
 import com.bfb.business.contract.model.ContractStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,5 +39,16 @@ public interface ContractJpaRepository extends JpaRepository<ContractEntity, UUI
         @Param("clientId") UUID clientId,
         @Param("vehicleId") UUID vehicleId,
         @Param("status") ContractStatus status
+    );
+
+    @Query("SELECT c FROM ContractEntity c WHERE " +
+           "(:clientId IS NULL OR c.clientId = :clientId) AND " +
+           "(:vehicleId IS NULL OR c.vehicleId = :vehicleId) AND " +
+           "(:status IS NULL OR c.status = :status)")
+    Page<ContractEntity> findByCriteria(
+        @Param("clientId") UUID clientId,
+        @Param("vehicleId") UUID vehicleId,
+        @Param("status") ContractStatus status,
+        Pageable pageable
     );
 }

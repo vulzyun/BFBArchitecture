@@ -154,6 +154,15 @@ public class ContractService {
         return contractRepository.findByCriteria(clientId, vehicleId, status);
     }
 
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<Contract> findByCriteria(
+            UUID clientId, 
+            UUID vehicleId, 
+            ContractStatus status, 
+            org.springframework.data.domain.Pageable pageable) {
+        return contractRepository.findByCriteria(clientId, vehicleId, status, pageable);
+    }
+
     // === Helpers ===
 
     private Contract findByIdOrThrow(UUID id) {

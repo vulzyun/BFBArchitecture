@@ -16,9 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for contract management.
@@ -86,17 +84,18 @@ public class ContractController {
     @Operation(
         summary = "Search contracts",
         description = """
-            Multi-criteria contract search. All parameters are optional.
+            Multi-criteria contract search with pagination support. All parameters are optional.
             
             **Usage examples:**
-            - No parameters: returns all contracts
+            - No parameters: returns all contracts (paginated)
             - With clientId: all contracts for a client
             - With vehicleId: all contracts for a vehicle
             - With status: all contracts in a specific status
             - Combinations possible: clientId + status, vehicleId + status, etc.
+            - Pagination: ?page=0&size=10&sort=startDate,desc
             """
     )
-    public ResponseEntity<List<ContractDto>> search(
+    public ResponseEntity<org.springframework.data.domain.Page<ContractDto>> search(
             @io.swagger.v3.oas.annotations.Parameter(
                 description = "Client identifier (optional)",
                 example = "123e4567-e89b-12d3-a456-426614174000"
@@ -111,12 +110,17 @@ public class ContractController {
                 description = "Contract status (optional)",
                 example = "IN_PROGRESS"
             )
-            @RequestParam(required = false) ContractStatus status
+            @RequestParam(required = false) ContractStatus status,
+            @io.swagger.v3.oas.annotations.Parameter(
+                description = "Pagination parameters (page, size, sort)",
+                example = "page=0&size=20&sort=startDate,desc"
+            )
+            org.springframework.data.domain.Pageable pageable
     ) {
-        List<Contract> contracts = contractService.findByCriteria(clientId, vehicleId, status);
-        List<ContractDto> dtos = contracts.stream()
-            .map(contractMapper::toDto)
-            .collect(Collectors.toList());
+        org.springframework.data.domain.Page<Contract> contracts = contractService.findByCriteria(
+            clientId, vehicleId, status, pageable
+        );
+        org.springframework.data.domain.Page<ContractDto> dtos = contracts.map(contractMapper::toDto);
         return ResponseEntity.ok(dtos);
     }
 

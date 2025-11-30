@@ -3,6 +3,8 @@ package com.bfb.infrastructure.persistence.vehicle;
 import com.bfb.business.vehicle.model.Vehicle;
 import com.bfb.business.vehicle.model.VehicleStatus;
 import com.bfb.business.vehicle.service.VehicleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -43,11 +45,23 @@ public class VehicleRepositoryImpl implements VehicleRepository {
     }
 
     @Override
+    public Page<Vehicle> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable)
+            .map(this::toDomain);
+    }
+
+    @Override
     public List<Vehicle> findByStatus(VehicleStatus status) {
         return jpaRepository.findByStatus(status)
             .stream()
             .map(this::toDomain)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Vehicle> findByStatus(VehicleStatus status, Pageable pageable) {
+        return jpaRepository.findByStatus(status, pageable)
+            .map(this::toDomain);
     }
 
     @Override

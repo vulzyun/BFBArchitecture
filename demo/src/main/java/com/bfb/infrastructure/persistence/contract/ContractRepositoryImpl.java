@@ -3,6 +3,8 @@ package com.bfb.infrastructure.persistence.contract;
 import com.bfb.business.contract.model.Contract;
 import com.bfb.business.contract.model.ContractStatus;
 import com.bfb.business.contract.service.ContractRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -42,6 +44,12 @@ public class ContractRepositoryImpl implements ContractRepository {
             .stream()
             .map(this::toDomain)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Contract> findByCriteria(UUID clientId, UUID vehicleId, ContractStatus status, Pageable pageable) {
+        return jpaRepository.findByCriteria(clientId, vehicleId, status, pageable)
+            .map(this::toDomain);
     }
 
     @Override

@@ -151,6 +151,44 @@ POST /api/contrats/jobs/mark-late
 
 ---
 
+## ⏰ Scheduled Jobs
+
+### Automatic Late Contract Detection
+
+The application includes an **automatic scheduler** that marks contracts as LATE when they exceed their end date.
+
+**Schedule:** Every day at 2:00 AM (configurable)
+
+**Configuration** (application.yml):
+```yaml
+bfb:
+  scheduling:
+    mark-late-job:
+      enabled: true                    # Enable/disable the job
+      cron: "0 0 2 * * ?"              # Cron expression (default: 2:00 AM daily)
+```
+
+**Cron Expression Examples:**
+- `"0 0 2 * * ?"` - Every day at 2:00 AM
+- `"0 */30 * * * ?"` - Every 30 minutes
+- `"0 0 */6 * * ?"` - Every 6 hours
+- `"0 0 0 * * ?"` - Every day at midnight
+
+**To disable the scheduler:**
+```yaml
+bfb:
+  scheduling:
+    mark-late-job:
+      enabled: false
+```
+
+**Manual trigger** is still available via REST API:
+```http
+POST /api/contracts/jobs/mark-late
+```
+
+---
+
 ## 🔒 Règles métier
 
 ### 1. Validation des dates

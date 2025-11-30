@@ -11,9 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for client management.
@@ -46,12 +44,19 @@ public class ClientController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all clients", description = "Retrieves the list of all clients")
-    public ResponseEntity<List<ClientDto>> getAll() {
-        List<Client> clients = clientService.findAll();
-        List<ClientDto> dtos = clients.stream()
-            .map(this::toDto)
-            .collect(Collectors.toList());
+    @Operation(
+        summary = "Get all clients", 
+        description = "Retrieves the list of all clients with pagination support. Use ?page=0&size=20&sort=name,asc for pagination."
+    )
+    public ResponseEntity<org.springframework.data.domain.Page<ClientDto>> getAll(
+        @io.swagger.v3.oas.annotations.Parameter(
+            description = "Pagination parameters (page, size, sort)",
+            example = "page=0&size=20&sort=name,asc"
+        )
+        org.springframework.data.domain.Pageable pageable
+    ) {
+        org.springframework.data.domain.Page<Client> clients = clientService.findAll(pageable);
+        org.springframework.data.domain.Page<ClientDto> dtos = clients.map(this::toDto);
         return ResponseEntity.ok(dtos);
     }
 

@@ -38,10 +38,18 @@ spring:
       doc-expansion: none
     show-actuator: false
 
+# Scheduled Jobs Configuration
+bfb:
+  scheduling:
+    mark-late-job:
+      enabled: true
+      cron: "0 0 2 * * ?"  # Every day at 2:00 AM (can be customized)
+
 # Logging
 logging:
   level:
     com.BFBManagement: DEBUG
+    com.bfb: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springdoc: DEBUG

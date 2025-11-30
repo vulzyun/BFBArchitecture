@@ -336,8 +336,10 @@ class ContractControllerIntegrationTest {
         // When & Then
         mockMvc.perform(get("/api/contracts"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(2))));
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(2))))
+            .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(2)))
+            .andExpect(jsonPath("$.pageable").exists());
     }
 
     @Test
@@ -390,8 +392,9 @@ class ContractControllerIntegrationTest {
         mockMvc.perform(get("/api/contracts")
                 .param("status", "PENDING"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray())
-            .andExpect(jsonPath("$[*].status", everyItem(is("PENDING"))));
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[*].status", everyItem(is("PENDING"))))
+            .andExpect(jsonPath("$.pageable").exists());
     }
 
     @Test
