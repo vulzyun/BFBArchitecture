@@ -1,6 +1,5 @@
 package com.bfb.interfaces.rest.contract;
 
-import com.bfb.business.contract.model.ContractStatus;
 import com.bfb.interfaces.rest.contract.dto.CreateContractRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

@@ -1,5 +1,6 @@
 package com.bfb.business.contract.model;
 
+import com.bfb.business.contract.exception.TransitionNotAllowedException;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -44,7 +45,7 @@ class ContractTest {
         );
         
         // When & Then
-        assertThrows(IllegalStateException.class, contract::start);
+        assertThrows(TransitionNotAllowedException.class, contract::start);
     }
 
     @Test
@@ -98,7 +99,7 @@ class ContractTest {
         );
         
         // When & Then
-        assertThrows(IllegalStateException.class, contract::terminate);
+        assertThrows(TransitionNotAllowedException.class, contract::terminate);
     }
 
     @Test
@@ -133,7 +134,7 @@ class ContractTest {
         );
         
         // When & Then
-        assertThrows(IllegalStateException.class, contract::cancel);
+        assertThrows(TransitionNotAllowedException.class, contract::cancel);
     }
 
     @Test
@@ -168,6 +169,6 @@ class ContractTest {
         );
         
         // When & Then
-        assertThrows(IllegalStateException.class, contract::markLate);
+        assertThrows(TransitionNotAllowedException.class, contract::markLate);
     }
 }

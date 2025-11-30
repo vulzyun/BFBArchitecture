@@ -3,6 +3,7 @@ package com.bfb.business.contract.service;
 import com.bfb.business.contract.exception.*;
 import com.bfb.business.contract.model.Contract;
 import com.bfb.business.contract.model.ContractStatus;
+import com.bfb.business.contract.validation.*;
 import com.bfb.business.vehicle.model.VehicleStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class ContractServiceTest {
     @Mock
     private ClientExistencePort clientExistencePort;
 
+    private ContractValidationChain validationChain;
     private ContractService contractService;
 
     private UUID clientId;
@@ -42,7 +44,20 @@ class ContractServiceTest {
 
     @BeforeEach
     void setUp() {
-        contractService = new ContractService(contractRepository, vehicleStatusPort, clientExistencePort);
+        // Create real validators with mocked dependencies
+        DateValidator dateValidator = new DateValidator();
+        ClientExistenceValidator clientExistenceValidator = new ClientExistenceValidator(clientExistencePort);
+        VehicleAvailabilityValidator vehicleAvailabilityValidator = new VehicleAvailabilityValidator(vehicleStatusPort);
+        OverlapValidator overlapValidator = new OverlapValidator(contractRepository);
+        
+        validationChain = new ContractValidationChain(
+            dateValidator,
+            clientExistenceValidator,
+            vehicleAvailabilityValidator,
+            overlapValidator
+        );
+        
+        contractService = new ContractService(contractRepository, validationChain);
         
         clientId = UUID.randomUUID();
         vehicleId = UUID.randomUUID();
