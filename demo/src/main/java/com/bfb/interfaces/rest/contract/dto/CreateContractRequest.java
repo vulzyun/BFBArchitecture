@@ -13,16 +13,14 @@ public record CreateContractRequest(
     @NotNull(message = "clientId is required")
     @Schema(
         description = "Client unique identifier",
-        example = "123e4567-e89b-12d3-a456-426614174000",
-        required = true
+        example = "123e4567-e89b-12d3-a456-426614174000"
     )
     UUID clientId,
     
     @NotNull(message = "vehicleId is required")
     @Schema(
         description = "Vehicle unique identifier",
-        example = "987fcdeb-51a2-43d7-b123-987654321abc",
-        required = true
+        example = "987fcdeb-51a2-43d7-b123-987654321abc"
     )
     UUID vehicleId,
     
@@ -30,7 +28,6 @@ public record CreateContractRequest(
     @Schema(
         description = "Rental start date (ISO 8601 format)",
         example = "2025-11-10",
-        required = true,
         type = "string",
         format = "date"
     )
@@ -40,7 +37,6 @@ public record CreateContractRequest(
     @Schema(
         description = "Rental end date (ISO 8601 format)",
         example = "2025-11-20",
-        required = true,
         type = "string",
         format = "date"
     )
