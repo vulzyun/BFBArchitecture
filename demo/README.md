@@ -244,9 +244,65 @@ Toute transition invalide → 422 Unprocessable Entity
 - Java 17
 - Spring Boot 3.5.7
 - Spring Data JPA
+- Flyway (Database Migrations)
 - H2 Database (dev)
 - Springdoc OpenAPI 2.3.0
 - JUnit 5 + Mockito + AssertJ
+
+---
+
+## 🗃️ Database Migrations
+
+The application uses **Flyway** for version-controlled database schema management, ensuring consistent and reproducible database states across all environments.
+
+### Migration Files
+
+Located in `src/main/resources/db/migration/`:
+- `V1__Initial_schema.sql` - Creates tables (clients, vehicles, contracts) with indexes
+- `V2__Sample_data.sql` - Inserts sample data for development (optional in production)
+
+### How It Works
+
+1. **Automatic execution**: Migrations run on application startup
+2. **Version tracking**: Flyway maintains a `flyway_schema_history` table
+3. **Immutable migrations**: Once applied, migrations cannot be modified
+4. **Validation**: Hibernate validates schema matches entities (`ddl-auto: validate`)
+
+### Configuration
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Validates schema instead of auto-creating
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+```
+
+### Production Best Practices
+
+✅ **Never modify applied migrations** - Create new versions instead  
+✅ **Test migrations on production copy** before deploying  
+✅ **Keep migrations small** - One logical change per migration  
+✅ **Version control migrations** - They are code  
+✅ **Review migration history**: Check `flyway_schema_history` table
+
+### Useful Commands
+
+```bash
+# Show migration status
+./mvnw flyway:info
+
+# Validate migrations
+./mvnw flyway:validate
+
+# Clean database (⚠️ dangerous - drops all objects)
+./mvnw flyway:clean
+```
+
+For more details, see `src/main/resources/db/migration/README.md`
 
 ---
 
