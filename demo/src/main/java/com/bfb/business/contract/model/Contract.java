@@ -77,41 +77,39 @@ public class Contract {
         this.status = status;
     }
 
-    // Business methods for state transitions
+    // Business methods for state transitions using State Pattern
+    
+    /**
+     * Starts the contract by transitioning from PENDING to IN_PROGRESS.
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public void start() {
-        if (!Rules.isTransitionAllowed(this.status, ContractStatus.IN_PROGRESS)) {
-            throw new IllegalStateException(
-                String.format("Cannot start a contract in status %s", this.status)
-            );
-        }
-        this.status = ContractStatus.IN_PROGRESS;
+        this.status = this.status.transitionTo(ContractStatus.IN_PROGRESS);
     }
 
+    /**
+     * Terminates the contract by transitioning to COMPLETED.
+     * Valid from IN_PROGRESS or LATE status.
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public void terminate() {
-        if (!Rules.isTransitionAllowed(this.status, ContractStatus.COMPLETED)) {
-            throw new IllegalStateException(
-                String.format("Cannot terminate a contract in status %s", this.status)
-            );
-        }
-        this.status = ContractStatus.COMPLETED;
+        this.status = this.status.transitionTo(ContractStatus.COMPLETED);
     }
 
+    /**
+     * Cancels the contract by transitioning from PENDING to CANCELLED.
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public void cancel() {
-        if (!Rules.isTransitionAllowed(this.status, ContractStatus.CANCELLED)) {
-            throw new IllegalStateException(
-                String.format("Cannot cancel a contract in status %s", this.status)
-            );
-        }
-        this.status = ContractStatus.CANCELLED;
+        this.status = this.status.transitionTo(ContractStatus.CANCELLED);
     }
 
+    /**
+     * Marks the contract as late by transitioning from IN_PROGRESS to LATE.
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public void markLate() {
-        if (!Rules.isTransitionAllowed(this.status, ContractStatus.LATE)) {
-            throw new IllegalStateException(
-                String.format("Cannot mark late a contract in status %s", this.status)
-            );
-        }
-        this.status = ContractStatus.LATE;
+        this.status = this.status.transitionTo(ContractStatus.LATE);
     }
 
     /**
