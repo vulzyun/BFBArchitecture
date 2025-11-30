@@ -51,4 +51,14 @@ public interface ContractJpaRepository extends JpaRepository<ContractEntity, UUI
         @Param("status") ContractStatus status,
         Pageable pageable
     );
+    
+    /**
+     * Optimized query to find overdue contracts.
+     * Only loads contracts matching both status and date criteria.
+     */
+    @Query("SELECT c FROM ContractEntity c WHERE c.status = :status AND c.endDate < :date")
+    List<ContractEntity> findOverdueContracts(
+        @Param("status") ContractStatus status,
+        @Param("date") LocalDate date
+    );
 }

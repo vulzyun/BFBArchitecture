@@ -22,4 +22,14 @@ public interface ContractRepository {
     List<Contract> findOverlappingContracts(UUID vehicleId, LocalDate startDate, LocalDate endDate);
     List<Contract> findByStatus(ContractStatus status);
     List<Contract> findByVehicleIdAndStatus(UUID vehicleId, ContractStatus status);
+    
+    /**
+     * Finds all contracts in a given status with end date before the specified date.
+     * Optimized query for finding overdue contracts.
+     * 
+     * @param status the contract status to filter by
+     * @param date the date to compare end dates against
+     * @return list of contracts matching the criteria
+     */
+    List<Contract> findOverdueContracts(ContractStatus status, LocalDate date);
 }

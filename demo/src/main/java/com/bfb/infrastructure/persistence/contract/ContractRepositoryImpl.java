@@ -76,6 +76,14 @@ public class ContractRepositoryImpl implements ContractRepository {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Contract> findOverdueContracts(ContractStatus status, LocalDate date) {
+        return jpaRepository.findOverdueContracts(status, date)
+            .stream()
+            .map(this::toDomain)
+            .collect(Collectors.toList());
+    }
+
     // Mapping methods
     private ContractEntity toEntity(Contract contract) {
         return new ContractEntity(
