@@ -17,8 +17,8 @@ import java.util.UUID;
  * REST controller for client management.
  */
 @RestController
-@RequestMapping("/api/clients")
-@Tag(name = "Clients", description = "Client management API")
+@RequestMapping("/api/v1/clients")
+@Tag(name = "Clients", description = "Client management API (v1)")
 public class ClientController {
 
     private final ClientService clientService;

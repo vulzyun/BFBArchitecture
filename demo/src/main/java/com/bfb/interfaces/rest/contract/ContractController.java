@@ -22,8 +22,8 @@ import java.util.UUID;
  * REST controller for contract management.
  */
 @RestController
-@RequestMapping("/api/contracts")
-@Tag(name = "Contracts", description = "Contract management API")
+@RequestMapping("/api/v1/contracts")
+@Tag(name = "Contracts", description = "Contract management API (v1)")
 public class ContractController {
 
     private final ContractService contractService;

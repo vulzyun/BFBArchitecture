@@ -18,8 +18,8 @@ import java.util.UUID;
  * REST controller for vehicle management.
  */
 @RestController
-@RequestMapping("/api/vehicles")
-@Tag(name = "Vehicles", description = "Vehicle management API")
+@RequestMapping("/api/v1/vehicles")
+@Tag(name = "Vehicles", description = "Vehicle management API (v1)")
 public class VehicleController {
 
     private final VehicleService vehicleService;
