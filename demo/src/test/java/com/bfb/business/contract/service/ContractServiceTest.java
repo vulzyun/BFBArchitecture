@@ -276,13 +276,10 @@ class ContractServiceTest {
             UUID.randomUUID(), clientId, UUID.randomUUID(), 
             LocalDate.now().minusDays(8), pastDate, ContractStatus.IN_PROGRESS
         );
-        Contract validContract = new Contract(
-            UUID.randomUUID(), clientId, UUID.randomUUID(), 
-            LocalDate.now().minusDays(2), LocalDate.now().plusDays(3), ContractStatus.IN_PROGRESS
-        );
         
-        when(contractRepository.findByStatus(ContractStatus.IN_PROGRESS))
-            .thenReturn(List.of(overdueContract1, overdueContract2, validContract));
+        // Mock the new optimized query method
+        when(contractRepository.findOverdueContracts(eq(ContractStatus.IN_PROGRESS), any(LocalDate.class)))
+            .thenReturn(List.of(overdueContract1, overdueContract2));
         when(contractRepository.save(any(Contract.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -292,14 +289,13 @@ class ContractServiceTest {
         assertEquals(2, count);
         assertEquals(ContractStatus.LATE, overdueContract1.getStatus());
         assertEquals(ContractStatus.LATE, overdueContract2.getStatus());
-        assertEquals(ContractStatus.IN_PROGRESS, validContract.getStatus());
         verify(contractRepository, times(2)).save(any(Contract.class));
     }
 
     @Test
     void markLateIfOverdue_NoOverdueContracts() {
-        // Given
-        when(contractRepository.findByStatus(ContractStatus.IN_PROGRESS))
+        // Given - mock the new optimized query method
+        when(contractRepository.findOverdueContracts(eq(ContractStatus.IN_PROGRESS), any(LocalDate.class)))
             .thenReturn(Collections.emptyList());
 
         // When

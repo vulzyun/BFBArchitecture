@@ -39,7 +39,7 @@ class ContractControllerIntegrationTest {
     @org.junit.jupiter.api.BeforeEach
     void setUp() throws Exception {
         // Create a test client
-        String clientResponse = mockMvc.perform(post("/api/clients")
+        String clientResponse = mockMvc.perform(post("/api/v1/clients")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Test Client\",\"email\":\"test" + System.nanoTime() + "@example.com\"}"))
             .andExpect(status().isCreated())
@@ -49,7 +49,7 @@ class ContractControllerIntegrationTest {
         clientId = UUID.fromString(objectMapper.readTree(clientResponse).get("id").asText());
 
         // Create a test vehicle
-        String vehicleResponse = mockMvc.perform(post("/api/vehicles")
+        String vehicleResponse = mockMvc.perform(post("/api/v1/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"brand\":\"Toyota\",\"model\":\"Corolla\"}"))
             .andExpect(status().isCreated())
@@ -70,7 +70,7 @@ class ContractControllerIntegrationTest {
         );
 
         // When & Then
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -93,7 +93,7 @@ class ContractControllerIntegrationTest {
         );
 
         // When & Then
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -106,7 +106,7 @@ class ContractControllerIntegrationTest {
         String invalidJson = "{}";
 
         // When & Then
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
             .andExpect(status().isBadRequest());
@@ -125,7 +125,7 @@ class ContractControllerIntegrationTest {
             endDate
         );
         
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request1)))
             .andExpect(status().isCreated());
@@ -139,12 +139,12 @@ class ContractControllerIntegrationTest {
         );
 
         // Then
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request2)))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.title").value("Business conflict"))
-            .andExpect(jsonPath("$.detail").value(containsString("Overlap detected")));
+            .andExpect(jsonPath("$.detail").value(containsString("already booked")));
     }
 
     @Test
@@ -157,7 +157,7 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(8)
         );
         
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -168,7 +168,7 @@ class ContractControllerIntegrationTest {
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
 
         // When & Then
-        mockMvc.perform(get("/api/contracts/{id}", contractId))
+        mockMvc.perform(get("/api/v1/contracts/{id}", contractId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(contractId))
             .andExpect(jsonPath("$.status").value("PENDING"));
@@ -180,7 +180,7 @@ class ContractControllerIntegrationTest {
         UUID nonExistentId = UUID.randomUUID();
 
         // When & Then
-        mockMvc.perform(get("/api/contracts/{id}", nonExistentId))
+        mockMvc.perform(get("/api/v1/contracts/{id}", nonExistentId))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.title").value("Resource not found"));
     }
@@ -195,7 +195,7 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(8)
         );
         
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -206,7 +206,7 @@ class ContractControllerIntegrationTest {
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
 
         // When & Then
-        mockMvc.perform(patch("/api/contracts/{id}/start", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/start", contractId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
     }
@@ -221,7 +221,7 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(8)
         );
         
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -231,12 +231,12 @@ class ContractControllerIntegrationTest {
         
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
         
-        mockMvc.perform(patch("/api/contracts/{id}/start", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/start", contractId))
             .andExpect(status().isOk());
 
         // When - try to start again
         // Then
-        mockMvc.perform(patch("/api/contracts/{id}/start", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/start", contractId))
             .andExpect(status().isUnprocessableEntity())
             .andExpect(jsonPath("$.title").value("State transition not allowed"));
     }
@@ -251,7 +251,7 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(8)
         );
         
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -261,11 +261,11 @@ class ContractControllerIntegrationTest {
         
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
         
-        mockMvc.perform(patch("/api/contracts/{id}/start", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/start", contractId))
             .andExpect(status().isOk());
 
         // When & Then
-        mockMvc.perform(patch("/api/contracts/{id}/terminate", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/terminate", contractId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
@@ -280,7 +280,7 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(8)
         );
         
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -291,7 +291,7 @@ class ContractControllerIntegrationTest {
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
 
         // When & Then
-        mockMvc.perform(patch("/api/contracts/{id}/cancel", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/cancel", contractId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
@@ -307,7 +307,7 @@ class ContractControllerIntegrationTest {
         );
         
         // Create another vehicle for second contract
-        String vehicle2Response = mockMvc.perform(post("/api/vehicles")
+        String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"brand\":\"Honda\",\"model\":\"Civic\"}"))
             .andExpect(status().isCreated())
@@ -323,18 +323,18 @@ class ContractControllerIntegrationTest {
             LocalDate.now().plusDays(15)
         );
         
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request1)))
             .andExpect(status().isCreated());
         
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request2)))
             .andExpect(status().isCreated());
 
         // When & Then
-        mockMvc.perform(get("/api/contracts"))
+        mockMvc.perform(get("/api/v1/contracts"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(2))))
@@ -346,7 +346,7 @@ class ContractControllerIntegrationTest {
     void searchContracts_WithStatusFilter() throws Exception {
         // Given - create contracts with different statuses
         // Create another vehicle for second contract
-        String vehicle2Response = mockMvc.perform(post("/api/vehicles")
+        String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"brand\":\"Honda\",\"model\":\"Accord\"}"))
             .andExpect(status().isCreated())
@@ -369,13 +369,13 @@ class ContractControllerIntegrationTest {
         );
         
         // Create first contract
-        mockMvc.perform(post("/api/contracts")
+        mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request1)))
             .andExpect(status().isCreated());
         
         // Create and start second contract
-        String createResponse = mockMvc.perform(post("/api/contracts")
+        String createResponse = mockMvc.perform(post("/api/v1/contracts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request2)))
             .andExpect(status().isCreated())
@@ -385,11 +385,11 @@ class ContractControllerIntegrationTest {
         
         String contractId = objectMapper.readTree(createResponse).get("id").asText();
         
-        mockMvc.perform(patch("/api/contracts/{id}/start", contractId))
+        mockMvc.perform(patch("/api/v1/contracts/{id}/start", contractId))
             .andExpect(status().isOk());
 
         // When & Then - search for pending contracts
-        mockMvc.perform(get("/api/contracts")
+        mockMvc.perform(get("/api/v1/contracts")
                 .param("status", "PENDING"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
@@ -400,8 +400,9 @@ class ContractControllerIntegrationTest {
     @Test
     void markLateJob_Success() throws Exception {
         // When & Then
-        mockMvc.perform(post("/api/contracts/jobs/mark-late"))
+        mockMvc.perform(post("/api/v1/contracts/jobs/mark-late"))
             .andExpect(status().isAccepted())
             .andExpect(jsonPath("$.contractsMarkedLate").isNumber());
     }
 }
+
