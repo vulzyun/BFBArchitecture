@@ -1,15 +1,17 @@
 package com.bfb.infrastructure.persistence.vehicle;
 
 import com.bfb.business.vehicle.model.VehicleStatus;
+import com.bfb.infrastructure.persistence.common.BaseEntity;
 import jakarta.persistence.*;
 import java.util.UUID;
 
 /**
  * JPA entity for vehicle persistence.
+ * Extends BaseEntity for automatic audit field management (createdAt, updatedAt).
  */
 @Entity
 @Table(name = "vehicles")
-public class VehicleEntity {
+public class VehicleEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -1,16 +1,18 @@
 package com.bfb.infrastructure.persistence.client;
 
+import com.bfb.infrastructure.persistence.common.BaseEntity;
 import jakarta.persistence.*;
 import java.util.UUID;
 
 /**
  * JPA entity for client persistence.
+ * Extends BaseEntity for automatic audit field management (createdAt, updatedAt).
  */
 @Entity
 @Table(name = "clients", indexes = {
-    @Index(name = "idx_email", columnList = "email", unique = true)
+    @Index(name = "idx_client_email", columnList = "email")
 })
-public class ClientEntity {
+public class ClientEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
