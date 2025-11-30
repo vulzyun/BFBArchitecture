@@ -1,7 +1,6 @@
 package com.bfb.business.client.service;
 
 import com.bfb.business.client.exception.ClientNotFoundException;
-import com.bfb.business.client.exception.DuplicateEmailException;
 import com.bfb.business.client.model.Client;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,15 +21,8 @@ public class ClientService {
         this.clientRepository = clientRepository;
     }
 
-    public Client create(String name, String email) {
-        // Check for duplicate email
-        if (clientRepository.findByEmail(email).isPresent()) {
-            throw new DuplicateEmailException(
-                String.format("Client with email %s already exists", email)
-            );
-        }
-        
-        Client client = new Client(null, name, email);
+    public Client create(String prenom, String nom, String adresse, String numPermis, java.time.LocalDate dateNaissance) {
+        Client client = new Client(null, prenom, nom, adresse, numPermis, dateNaissance);
         return clientRepository.save(client);
     }
 
@@ -54,18 +46,14 @@ public class ClientService {
         return clientRepository.findById(id).isPresent();
     }
 
-    public Client update(UUID id, String name, String email) {
+    public Client update(UUID id, String prenom, String nom, String adresse, String numPermis, java.time.LocalDate dateNaissance) {
         Client client = findById(id);
         
-        // Check if email is changing and if it's already taken
-        if (!client.getEmail().equals(email) && clientRepository.findByEmail(email).isPresent()) {
-            throw new DuplicateEmailException(
-                String.format("Client with email %s already exists", email)
-            );
-        }
-        
-        client.setName(name);
-        client.setEmail(email);
+        client.setPrenom(prenom);
+        client.setNom(nom);
+        client.setAdresse(adresse);
+        client.setNumPermis(numPermis);
+        client.setDateNaissance(dateNaissance);
         return clientRepository.save(client);
     }
 

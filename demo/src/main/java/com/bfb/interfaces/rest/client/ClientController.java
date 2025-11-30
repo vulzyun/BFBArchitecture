@@ -34,7 +34,7 @@ public class ClientController extends BaseRestController<Client, ClientDto> {
     @PostMapping
     @Operation(summary = "Create a new client")
     public ResponseEntity<ClientDto> create(@Valid @RequestBody CreateClientRequest request) {
-        Client client = clientService.create(request.name(), request.email());
+        Client client = clientService.create(request.prenom(), request.nom(), request.adresse(), request.numPermis(), request.dateNaissance());
         return created(clientMapper.toDto(client));
     }
 
@@ -68,7 +68,7 @@ public class ClientController extends BaseRestController<Client, ClientDto> {
         @PathVariable UUID id, 
         @Valid @RequestBody CreateClientRequest request
     ) {
-        Client client = clientService.update(id, request.name(), request.email());
+        Client client = clientService.update(id, request.prenom(), request.nom(), request.adresse(), request.numPermis(), request.dateNaissance());
         return ok(clientMapper.toDto(client));
     }
 

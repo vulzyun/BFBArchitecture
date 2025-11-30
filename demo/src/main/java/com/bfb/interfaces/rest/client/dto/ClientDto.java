@@ -1,6 +1,7 @@
 package com.bfb.interfaces.rest.client.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -11,9 +12,18 @@ public record ClientDto(
     @Schema(description = "Client unique identifier")
     UUID id,
     
-    @Schema(description = "Client name")
-    String name,
+    @Schema(description = "Client first name")
+    String prenom,
     
-    @Schema(description = "Client email")
-    String email
+    @Schema(description = "Client last name")
+    String nom,
+    
+    @Schema(description = "Client address")
+    String adresse,
+    
+    @Schema(description = "Driver's license number")
+    String numPermis,
+    
+    @Schema(description = "Client date of birth")
+    LocalDate dateNaissance
 ) {}

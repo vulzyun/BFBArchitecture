@@ -51,7 +51,8 @@ public class ClientRepositoryImpl implements ClientRepository {
 
     @Override
     public Optional<Client> findByEmail(String email) {
-        return jpaRepository.findByEmail(email).map(this::toDomain);
+        // Email field removed from model, return empty
+        return Optional.empty();
     }
 
     @Override
@@ -68,16 +69,23 @@ public class ClientRepositoryImpl implements ClientRepository {
     private ClientEntity toEntity(Client client) {
         return new ClientEntity(
             client.getId(),
-            client.getName(),
-            client.getEmail()
+            client.getPrenom(),
+            client.getNom(),
+            client.getAdresse(),
+            client.getNumPermis(),
+            client.getDateNaissance()
         );
     }
 
     private Client toDomain(ClientEntity entity) {
         return new Client(
             entity.getId(),
-            entity.getName(),
-            entity.getEmail()
+            entity.getPrenom(),
+            entity.getNom(),
+            entity.getAdresse(),
+            entity.getNumPermis(),
+            entity.getDateNaissance()
         );
     }
 }
+ 
