@@ -2,22 +2,20 @@ package com.bfb.interfaces.rest.contract.mapper;
 
 import com.bfb.business.contract.model.Contract;
 import com.bfb.interfaces.rest.contract.dto.ContractDto;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 
 /**
- * Mapper between Contract domain model and ContractDto.
+ * MapStruct mapper between Contract domain model and ContractDto.
+ * Automatically generates implementation at compile time.
  */
-@Component
-public class ContractMapper {
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface ContractMapper {
 
-    public ContractDto toDto(Contract contract) {
-        return new ContractDto(
-            contract.getId(),
-            contract.getClientId(),
-            contract.getVehicleId(),
-            contract.getStartDate(),
-            contract.getEndDate(),
-            contract.getStatus()
-        );
-    }
+    /**
+     * Converts a Contract domain entity to a ContractDto.
+     * @param contract the contract entity
+     * @return the contract DTO
+     */
+    ContractDto toDto(Contract contract);
 }
