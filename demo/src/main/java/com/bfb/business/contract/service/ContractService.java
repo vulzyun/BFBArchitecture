@@ -33,43 +33,94 @@ public class ContractService {
         this.clientExistencePort = clientExistencePort;
     }
 
+    /**
+     * Creates a new contract with comprehensive validation.
+     * Validates dates, client existence, vehicle availability, and checks for scheduling conflicts.
+     * 
+     * @param clientId the client ID
+     * @param vehicleId the vehicle ID
+     * @param startDate the rental start date
+     * @param endDate the rental end date
+     * @return the created contract with PENDING status
+     * @throws ValidationException if dates are invalid
+     * @throws ClientUnknownException if client doesn't exist
+     * @throws VehicleUnavailableException if vehicle is broken
+     * @throws OverlapException if dates overlap with existing contracts
+     */
     public Contract create(UUID clientId, UUID vehicleId, LocalDate startDate, LocalDate endDate) {
-        // 1. Validate dates
+        validateDates(startDate, endDate);
+        validateClientExists(clientId);
+        validateVehicleAvailable(vehicleId);
+        validateNoOverlap(vehicleId, startDate, endDate);
+        
+        return createAndSaveContract(clientId, vehicleId, startDate, endDate);
+    }
+    
+    /**
+     * Validates that start date is before end date.
+     */
+    private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (!startDate.isBefore(endDate)) {
             throw new ValidationException(
-                "Start date must be before end date"
+                String.format("Start date (%s) must be before end date (%s)", startDate, endDate)
             );
         }
-
-        // 2. Check client exists
+    }
+    
+    /**
+     * Validates that the client exists in the system.
+     */
+    private void validateClientExists(UUID clientId) {
         if (!clientExistencePort.existsById(clientId)) {
             throw new ClientUnknownException(
-                String.format("Client %s not found", clientId)
+                String.format("Client with ID '%s' not found. Ensure the client exists before creating a contract.", 
+                             clientId)
             );
         }
-
-        // 3. Check vehicle is not broken
+    }
+    
+    /**
+     * Validates that the vehicle is available for rental (not broken).
+     */
+    private void validateVehicleAvailable(UUID vehicleId) {
         VehicleStatus vehicleStatus = vehicleStatusPort.getStatus(vehicleId);
         if (vehicleStatus == VehicleStatus.BROKEN) {
             throw new VehicleUnavailableException(
-                String.format("Vehicle %s is broken and cannot be rented", vehicleId)
+                String.format("Vehicle '%s' is currently broken and cannot be rented. " +
+                             "Please choose another vehicle or wait for repairs.", vehicleId)
             );
         }
-
-        // 4. Check for overlapping contracts
+    }
+    
+    /**
+     * Validates that no other contracts overlap with the requested period.
+     */
+    private void validateNoOverlap(UUID vehicleId, LocalDate startDate, LocalDate endDate) {
         List<Contract> overlappingContracts = contractRepository.findOverlappingContracts(
             vehicleId, startDate, endDate
         );
         
         if (!overlappingContracts.isEmpty()) {
+            String conflictingIds = overlappingContracts.stream()
+                .map(c -> c.getId().toString())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("unknown");
+                
             throw new OverlapException(
-                String.format("Overlap detected for vehicle %s on period %s - %s",
-                    vehicleId, startDate, endDate)
+                String.format("Cannot create contract: Vehicle '%s' is already booked during %s to %s. " +
+                             "Conflicting contract IDs: %s",
+                             vehicleId, startDate, endDate, conflictingIds)
             );
         }
-
-        // 5. Create and save contract
-        Contract contract = new Contract(null, clientId, vehicleId, startDate, endDate, ContractStatus.PENDING);
+    }
+    
+    /**
+     * Creates and persists a new contract with PENDING status.
+     */
+    private Contract createAndSaveContract(UUID clientId, UUID vehicleId, 
+                                          LocalDate startDate, LocalDate endDate) {
+        Contract contract = new Contract(null, clientId, vehicleId, startDate, endDate, 
+                                        ContractStatus.PENDING);
         return contractRepository.save(contract);
     }
 
@@ -112,17 +163,26 @@ public class ContractService {
         return contractRepository.save(contract);
     }
 
+    /**
+     * Marks all overdue contracts as LATE.
+     * Uses optimized query to find only contracts that are IN_PROGRESS and past their end date.
+     * 
+     * @return the number of contracts marked as late
+     */
     public int markLateIfOverdue() {
         LocalDate today = LocalDate.now();
-        List<Contract> inProgressContracts = contractRepository.findByStatus(ContractStatus.IN_PROGRESS);
+        
+        // ✅ OPTIMIZED: Only load contracts that are actually overdue
+        List<Contract> overdueContracts = contractRepository.findOverdueContracts(
+            ContractStatus.IN_PROGRESS, 
+            today
+        );
         
         int count = 0;
-        for (Contract contract : inProgressContracts) {
-            if (contract.getEndDate().isBefore(today)) {
-                contract.markLate();
-                contractRepository.save(contract);
-                count++;
-            }
+        for (Contract contract : overdueContracts) {
+            contract.markLate();
+            contractRepository.save(contract);
+            count++;
         }
         
         return count;
