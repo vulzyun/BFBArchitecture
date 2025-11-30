@@ -3,8 +3,8 @@ package com.bfb.business.contract.service;
 import com.bfb.business.contract.exception.*;
 import com.bfb.business.contract.model.Contract;
 import com.bfb.business.contract.model.ContractStatus;
-import com.bfb.business.contract.model.Rules;
-import com.bfb.business.vehicle.model.VehicleStatus;
+import com.bfb.business.contract.validation.ContractCreationContext;
+import com.bfb.business.contract.validation.ContractValidationChain;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,16 +21,13 @@ import java.util.UUID;
 public class ContractService {
 
     private final ContractRepository contractRepository;
-    private final VehicleStatusPort vehicleStatusPort;
-    private final ClientExistencePort clientExistencePort;
+    private final ContractValidationChain validationChain;
 
     public ContractService(
             ContractRepository contractRepository,
-            VehicleStatusPort vehicleStatusPort,
-            ClientExistencePort clientExistencePort) {
+            ContractValidationChain validationChain) {
         this.contractRepository = contractRepository;
-        this.vehicleStatusPort = vehicleStatusPort;
-        this.clientExistencePort = clientExistencePort;
+        this.validationChain = validationChain;
     }
 
     /**
@@ -48,70 +45,11 @@ public class ContractService {
      * @throws OverlapException if dates overlap with existing contracts
      */
     public Contract create(UUID clientId, UUID vehicleId, LocalDate startDate, LocalDate endDate) {
-        validateDates(startDate, endDate);
-        validateClientExists(clientId);
-        validateVehicleAvailable(vehicleId);
-        validateNoOverlap(vehicleId, startDate, endDate);
+        // Use validation chain for all validations
+        ContractCreationContext context = new ContractCreationContext(clientId, vehicleId, startDate, endDate);
+        validationChain.validateAll(context);
         
         return createAndSaveContract(clientId, vehicleId, startDate, endDate);
-    }
-    
-    /**
-     * Validates that start date is before end date.
-     */
-    private void validateDates(LocalDate startDate, LocalDate endDate) {
-        if (!startDate.isBefore(endDate)) {
-            throw new ValidationException(
-                String.format("Start date (%s) must be before end date (%s)", startDate, endDate)
-            );
-        }
-    }
-    
-    /**
-     * Validates that the client exists in the system.
-     */
-    private void validateClientExists(UUID clientId) {
-        if (!clientExistencePort.existsById(clientId)) {
-            throw new ClientUnknownException(
-                String.format("Client with ID '%s' not found. Ensure the client exists before creating a contract.", 
-                             clientId)
-            );
-        }
-    }
-    
-    /**
-     * Validates that the vehicle is available for rental (not broken).
-     */
-    private void validateVehicleAvailable(UUID vehicleId) {
-        VehicleStatus vehicleStatus = vehicleStatusPort.getStatus(vehicleId);
-        if (vehicleStatus == VehicleStatus.BROKEN) {
-            throw new VehicleUnavailableException(
-                String.format("Vehicle '%s' is currently broken and cannot be rented. " +
-                             "Please choose another vehicle or wait for repairs.", vehicleId)
-            );
-        }
-    }
-    
-    /**
-     * Validates that no other contracts overlap with the requested period.
-     */
-    private void validateNoOverlap(UUID vehicleId, LocalDate startDate, LocalDate endDate) {
-        List<Contract> overlappingContracts = contractRepository.findOverlappingContracts(
-            vehicleId, startDate, endDate
-        );
-        
-        if (!overlappingContracts.isEmpty()) {
-            String conflictingIds = overlappingContracts.stream()
-                .map(c -> c.getId().toString())
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("unknown");
-                
-            throw new OverlapException(
-                String.format("Cannot create contract: Vehicle '%s' is already booked during %s to %s. " +
-                             "Conflicting contract IDs: %s",
-                             vehicleId, startDate, endDate, conflictingIds)
-            );
-        }
     }
     
     /**
@@ -124,42 +62,48 @@ public class ContractService {
         return contractRepository.save(contract);
     }
 
+    /**
+     * Starts a contract (PENDING → IN_PROGRESS).
+     * State validation is performed by the Contract entity.
+     * 
+     * @param contractId the contract ID
+     * @return the updated contract
+     * @throws ContractNotFoundException if contract not found
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public Contract start(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        
-        if (!Rules.isTransitionAllowed(contract.getStatus(), ContractStatus.IN_PROGRESS)) {
-            throw new TransitionNotAllowedException(
-                String.format("Cannot start a contract in status %s", contract.getStatus())
-            );
-        }
-        
-        contract.start();
+        contract.start(); // State pattern handles validation
         return contractRepository.save(contract);
     }
 
+    /**
+     * Terminates a contract (IN_PROGRESS/LATE → COMPLETED).
+     * State validation is performed by the Contract entity.
+     * 
+     * @param contractId the contract ID
+     * @return the updated contract
+     * @throws ContractNotFoundException if contract not found
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public Contract terminate(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        
-        if (!Rules.isTransitionAllowed(contract.getStatus(), ContractStatus.COMPLETED)) {
-            throw new TransitionNotAllowedException(
-                String.format("Cannot terminate a contract in status %s", contract.getStatus())
-            );
-        }
-        
-        contract.terminate();
+        contract.terminate(); // State pattern handles validation
         return contractRepository.save(contract);
     }
 
+    /**
+     * Cancels a contract (PENDING → CANCELLED).
+     * State validation is performed by the Contract entity.
+     * 
+     * @param contractId the contract ID
+     * @return the updated contract
+     * @throws ContractNotFoundException if contract not found
+     * @throws TransitionNotAllowedException if transition is not allowed
+     */
     public Contract cancel(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        
-        if (!Rules.isTransitionAllowed(contract.getStatus(), ContractStatus.CANCELLED)) {
-            throw new TransitionNotAllowedException(
-                String.format("Cannot cancel a contract in status %s", contract.getStatus())
-            );
-        }
-        
-        contract.cancel();
+        contract.cancel(); // State pattern handles validation
         return contractRepository.save(contract);
     }
 
