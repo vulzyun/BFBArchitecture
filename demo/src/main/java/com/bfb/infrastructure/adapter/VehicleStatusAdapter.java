@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.external;
+package com.bfb.infrastructure.adapter;
 
 import com.bfb.business.vehicle.model.VehicleStatus;
 import com.bfb.business.contract.service.VehicleStatusPort;
@@ -8,15 +8,16 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 /**
- * Implementation of VehicleStatusPort using VehicleService.
+ * Adapter implementing VehicleStatusPort using VehicleService.
  * This adapter connects the contract domain to the vehicle domain.
+ * Part of the infrastructure layer in a multi-layered architecture.
  */
 @Component
-public class VehicleStatusService implements VehicleStatusPort {
+public class VehicleStatusAdapter implements VehicleStatusPort {
 
     private final VehicleService vehicleService;
 
-    public VehicleStatusService(VehicleService vehicleService) {
+    public VehicleStatusAdapter(VehicleService vehicleService) {
         this.vehicleService = vehicleService;
     }
 
