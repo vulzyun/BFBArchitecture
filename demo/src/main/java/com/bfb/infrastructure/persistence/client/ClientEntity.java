@@ -3,8 +3,6 @@ package com.bfb.infrastructure.persistence.client;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import com.bfb.infrastructure.persistence.common.BaseEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,11 +12,10 @@ import jakarta.persistence.Table;
 
 /**
  * JPA entity for client persistence.
- * Extends BaseEntity for automatic audit field management (createdAt, updatedAt).
  */
 @Entity
 @Table(name = "clients")
-public class ClientEntity extends BaseEntity {
+public class ClientEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

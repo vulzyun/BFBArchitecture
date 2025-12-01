@@ -2,33 +2,25 @@ spring:
   application:
     name: BFBManagement
     
-  # Configuration H2 (base de données en mémoire pour dev)
+  # Configuration PostgreSQL (tables existantes)
   datasource:
-    url: jdbc:h2:mem:bfbdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://188.166.77.14:5432/BFBArchitecture
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: MZS%9Z1bXPem$Q
     
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate  # Changed from create-drop to validate for production-ready setup
+      ddl-auto: none  # ✅ none = n'effectue aucune validation ni modification du schéma
     show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-  # Flyway configuration for database migrations
+  # Flyway DÉSACTIVÉ car tables existent déjà
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-    baseline-version: 0
+    enabled: false  # ⬅️ IMPORTANT : false car tables déjà créées
         
   # Configuration Swagger/OpenAPI
   springdoc:
@@ -50,7 +42,7 @@ bfb:
   scheduling:
     mark-late-job:
       enabled: true
-      cron: "0 0 2 * * ?"  # Every day at 2:00 AM (can be customized)
+      cron: "0 0 2 * * ?"  # Every day at 2:00 AM
 
 # Logging
 logging:
@@ -60,5 +52,6 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springdoc: DEBUG
     org.springframework.web: DEBUG
+    org.postgresql: DEBUG  # ⬅️ Ajouté pour voir les logs PostgreSQL
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

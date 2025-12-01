@@ -1,7 +1,6 @@
 package com.bfb.infrastructure.persistence.contract;
 
 import com.bfb.business.contract.model.ContractStatus;
-import com.bfb.infrastructure.persistence.common.BaseEntity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -9,14 +8,13 @@ import java.util.UUID;
 /**
  * JPA entity for contract persistence.
  * Separated from domain model for infrastructure isolation.
- * Extends BaseEntity for automatic audit field management (createdAt, updatedAt).
  */
 @Entity
 @Table(name = "contracts", indexes = {
     @Index(name = "idx_vehicle_dates", columnList = "vehicle_id, start_date, end_date"),
     @Index(name = "idx_status", columnList = "status")
 })
-public class ContractEntity extends BaseEntity {
+public class ContractEntity  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
