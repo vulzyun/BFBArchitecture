@@ -1,15 +1,16 @@
 package com.bfb.infrastructure.persistence.client;
 
-import com.bfb.business.client.model.Client;
-import com.bfb.business.client.service.ClientRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+import com.bfb.business.client.model.Client;
+import com.bfb.business.client.service.ClientRepository;
 
 /**
  * Implementation of ClientRepository using JPA.
@@ -49,11 +50,6 @@ public class ClientRepositoryImpl implements ClientRepository {
             .map(this::toDomain);
     }
 
-    @Override
-    public Optional<Client> findByEmail(String email) {
-        // Email field removed from model, return empty
-        return Optional.empty();
-    }
 
     @Override
     public void deleteById(UUID id) {
