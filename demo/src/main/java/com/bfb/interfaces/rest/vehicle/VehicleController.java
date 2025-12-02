@@ -31,7 +31,7 @@ public class VehicleController extends BaseRestController<Vehicle, VehicleDto> {
     @PostMapping
     @Operation(summary = "Create a new vehicle")
     public ResponseEntity<VehicleDto> create(@Valid @RequestBody CreateVehicleRequest request) {
-        Vehicle vehicle = vehicleService.create(request.brand(), request.model());
+        Vehicle vehicle = vehicleService.create(request.brand(), request.model(), request.motorization(), request.color(), request.registrationPlate(), request.purchaseDate());
         return created(vehicleMapper.toDto(vehicle));
     }
 

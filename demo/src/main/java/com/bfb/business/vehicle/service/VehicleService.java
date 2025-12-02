@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
 
 @Service
 @Transactional
@@ -19,8 +20,8 @@ public class VehicleService {
         this.vehicleRepository = vehicleRepository;
     }
 
-    public Vehicle create(String brand, String model) {
-        Vehicle vehicle = new Vehicle(null, brand, model, VehicleStatus.AVAILABLE);
+    public Vehicle create(String brand, String model, String motorization, String color, String registrationPlate, LocalDate purchaseDate) {
+        Vehicle vehicle = new Vehicle(null, brand, model, motorization, color, registrationPlate, purchaseDate, VehicleStatus.AVAILABLE);
         return vehicleRepository.save(vehicle);
     }
 

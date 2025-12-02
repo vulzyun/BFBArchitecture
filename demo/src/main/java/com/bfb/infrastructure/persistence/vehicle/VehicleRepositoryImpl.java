@@ -76,6 +76,10 @@ public class VehicleRepositoryImpl implements VehicleRepository {
             vehicle.getId(),
             vehicle.getBrand(),
             vehicle.getModel(),
+            vehicle.getMotorization(),
+            vehicle.getColor(),
+            vehicle.getRegistrationPlate(),
+            vehicle.getPurchaseDate(),
             vehicle.getStatus()
         );
     }
@@ -85,6 +89,10 @@ public class VehicleRepositoryImpl implements VehicleRepository {
             entity.getId(),
             entity.getBrand(),
             entity.getModel(),
+            entity.getMotorization(),
+            entity.getColor(),
+            entity.getRegistrationPlate(),
+            entity.getPurchaseDate(),
             entity.getStatus()
         );
     }

@@ -15,6 +15,10 @@ CREATE TABLE vehicles (
     id UUID NOT NULL,
     brand VARCHAR(50) NOT NULL,
     model VARCHAR(50) NOT NULL,
+    motorization VARCHAR(15) NOT NULL,
+    color VARCHAR(50) NOT NULL,
+    registrationPlate VARCHAR(50) NOT NULL,
+    purchaseDate DATE NOT NULL,
     status VARCHAR(20) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT chk_vehicle_status CHECK (status IN ('AVAILABLE', 'RENTED', 'BROKEN', 'MAINTENANCE'))
