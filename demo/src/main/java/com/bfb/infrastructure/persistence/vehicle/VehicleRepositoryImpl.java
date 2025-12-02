@@ -12,9 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of VehicleRepository using JPA.
- */
 @Component
 public class VehicleRepositoryImpl implements VehicleRepository {
 
@@ -74,7 +71,6 @@ public class VehicleRepositoryImpl implements VehicleRepository {
         return jpaRepository.existsById(id);
     }
 
-    // Mapping methods
     private VehicleEntity toEntity(Vehicle vehicle) {
         return new VehicleEntity(
             vehicle.getId(),

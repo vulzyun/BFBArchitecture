@@ -4,9 +4,6 @@ import com.bfb.business.vehicle.model.VehicleStatus;
 import jakarta.persistence.*;
 import java.util.UUID;
 
-/**
- * JPA entity for vehicle persistence.
- */
 @Entity
 @Table(name = "vehicles")
 public class VehicleEntity  {

@@ -2,9 +2,6 @@ package com.bfb.business.vehicle.model;
 
 import java.util.UUID;
 
-/**
- * Domain model representing a vehicle.
- */
 public class Vehicle {
     private UUID id;
     private String brand;

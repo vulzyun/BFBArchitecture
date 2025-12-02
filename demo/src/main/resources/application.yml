@@ -2,7 +2,6 @@ spring:
   application:
     name: BFBManagement
     
-  # Configuration PostgreSQL (tables existantes)
   datasource:
     url: jdbc:postgresql://188.166.77.14:5432/BFBArchitecture
     driver-class-name: org.postgresql.Driver
@@ -12,17 +11,15 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none  # ✅ none = n'effectue aucune validation ni modification du schéma
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-  # Flyway DÉSACTIVÉ car tables existent déjà
   flyway:
-    enabled: false  # ⬅️ IMPORTANT : false car tables déjà créées
+    enabled: false
         
-  # Configuration Swagger/OpenAPI
   springdoc:
     api-docs:
       path: /v3/api-docs
@@ -37,14 +34,12 @@ spring:
       doc-expansion: none
     show-actuator: false
 
-# Scheduled Jobs Configuration
 bfb:
   scheduling:
     mark-late-job:
       enabled: true
-      cron: "0 0 2 * * ?"  # Every day at 2:00 AM
+      cron: "0 0 2 * * ?"
 
-# Logging
 logging:
   level:
     com.bfb: DEBUG

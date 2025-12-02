@@ -5,10 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * DTO for contract response.
- */
-@Schema(description = "Complete representation of a rental contract")
+@Schema(description = "Rental contract representation")
 public record ContractDto(
     @Schema(
         description = "Unique contract identifier",

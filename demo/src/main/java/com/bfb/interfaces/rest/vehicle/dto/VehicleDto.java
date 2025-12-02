@@ -4,9 +4,6 @@ import com.bfb.business.vehicle.model.VehicleStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 
-/**
- * DTO for vehicle response.
- */
 @Schema(description = "Vehicle representation")
 public record VehicleDto(
     @Schema(description = "Vehicle unique identifier")

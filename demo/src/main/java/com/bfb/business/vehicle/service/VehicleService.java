@@ -9,9 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Business service for vehicle management.
- */
 @Service
 @Transactional
 public class VehicleService {

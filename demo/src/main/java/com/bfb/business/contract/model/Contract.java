@@ -3,10 +3,6 @@ package com.bfb.business.contract.model;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * Domain model representing a rental contract.
- * Contains business logic and state transitions.
- */
 public class Contract {
 
     private UUID id;
@@ -77,21 +73,10 @@ public class Contract {
         this.status = status;
     }
 
-    // Business methods for state transitions using State Pattern
-    
-    /**
-     * Starts the contract by transitioning from PENDING to IN_PROGRESS.
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public void start() {
         this.status = this.status.transitionTo(ContractStatus.IN_PROGRESS);
     }
 
-    /**
-     * Terminates the contract by transitioning to COMPLETED.
-     * Valid from IN_PROGRESS or LATE status.
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public void terminate() {
         this.status = this.status.transitionTo(ContractStatus.COMPLETED);
     }

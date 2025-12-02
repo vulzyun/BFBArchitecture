@@ -5,10 +5,6 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * JPA entity for contract persistence.
- * Separated from domain model for infrastructure isolation.
- */
 @Entity
 @Table(name = "contracts", indexes = {
     @Index(name = "idx_vehicle_dates", columnList = "vehicle_id, start_date, end_date"),

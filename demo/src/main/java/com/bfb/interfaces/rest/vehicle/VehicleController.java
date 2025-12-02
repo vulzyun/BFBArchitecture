@@ -15,13 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-/**
- * REST controller for vehicle management.
- * Extends BaseRestController for consistent response handling.
- */
 @RestController
 @RequestMapping("/api/v1/vehicles")
-@Tag(name = "Vehicles", description = "Vehicle management API (v1)")
+@Tag(name = "Vehicles", description = "Vehicle management API")
 public class VehicleController extends BaseRestController<Vehicle, VehicleDto> {
 
     private final VehicleService vehicleService;
@@ -47,16 +43,9 @@ public class VehicleController extends BaseRestController<Vehicle, VehicleDto> {
     }
 
     @GetMapping
-    @Operation(
-        summary = "Get all vehicles", 
-        description = "Retrieves the list of all vehicles with pagination support. Use ?page=0&size=20&sort=brand,asc for pagination."
-    )
+    @Operation(summary = "Get all vehicles")
     public ResponseEntity<org.springframework.data.domain.Page<VehicleDto>> getAll(
         @RequestParam(required = false) VehicleStatus status,
-        @io.swagger.v3.oas.annotations.Parameter(
-            description = "Pagination parameters (page, size, sort)",
-            example = "page=0&size=20&sort=brand,asc"
-        )
         org.springframework.data.domain.Pageable pageable
     ) {
         org.springframework.data.domain.Page<Vehicle> vehicles = status != null 

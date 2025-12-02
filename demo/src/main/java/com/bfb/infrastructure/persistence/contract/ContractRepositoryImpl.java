@@ -13,10 +13,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of ContractRepository using JPA.
- * Handles mapping between domain model and JPA entity.
- */
 @Component
 public class ContractRepositoryImpl implements ContractRepository {
 
@@ -84,7 +80,6 @@ public class ContractRepositoryImpl implements ContractRepository {
             .collect(Collectors.toList());
     }
 
-    // Mapping methods
     private ContractEntity toEntity(Contract contract) {
         return new ContractEntity(
             contract.getId(),

@@ -12,10 +12,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Business service for contract management.
- * Implements all business rules and validations.
- */
 @Service
 @Transactional
 public class ContractService {
@@ -30,31 +26,12 @@ public class ContractService {
         this.validationChain = validationChain;
     }
 
-    /**
-     * Creates a new contract with comprehensive validation.
-     * Validates dates, client existence, vehicle availability, and checks for scheduling conflicts.
-     * 
-     * @param clientId the client ID
-     * @param vehicleId the vehicle ID
-     * @param startDate the rental start date
-     * @param endDate the rental end date
-     * @return the created contract with PENDING status
-     * @throws ValidationException if dates are invalid
-     * @throws ClientUnknownException if client doesn't exist
-     * @throws VehicleUnavailableException if vehicle is broken
-     * @throws OverlapException if dates overlap with existing contracts
-     */
     public Contract create(UUID clientId, UUID vehicleId, LocalDate startDate, LocalDate endDate) {
-        // Use validation chain for all validations
         ContractCreationContext context = new ContractCreationContext(clientId, vehicleId, startDate, endDate);
         validationChain.validateAll(context);
-        
         return createAndSaveContract(clientId, vehicleId, startDate, endDate);
     }
     
-    /**
-     * Creates and persists a new contract with PENDING status.
-     */
     private Contract createAndSaveContract(UUID clientId, UUID vehicleId, 
                                           LocalDate startDate, LocalDate endDate) {
         Contract contract = new Contract(null, clientId, vehicleId, startDate, endDate, 
@@ -62,18 +39,9 @@ public class ContractService {
         return contractRepository.save(contract);
     }
 
-    /**
-     * Starts a contract (PENDING → IN_PROGRESS).
-     * State validation is performed by the Contract entity.
-     * 
-     * @param contractId the contract ID
-     * @return the updated contract
-     * @throws ContractNotFoundException if contract not found
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public Contract start(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        contract.start(); // State pattern handles validation
+        contract.start();
         return contractRepository.save(contract);
     }
 
