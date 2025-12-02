@@ -17,6 +17,7 @@ public interface ClientRepository {
     Optional<Client> findById(UUID id);
     List<Client> findAll();
     Page<Client> findAll(Pageable pageable);
+    Optional<Client> findByEmail(String email);
     void deleteById(UUID id);
     boolean existsById(UUID id);
 }

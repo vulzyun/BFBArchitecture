@@ -12,7 +12,7 @@ public class Client {
     private LocalDate dateNaissance;
 
     // Constructeurs
-    public Client(UUID clientId, String prenom, String nom, String adresse, String numPermis, LocalDate dateNaissance) {
+    public Client(UUID clientId, String prenom, String nom,String adresse,String numPermis, LocalDate dateNaissance) {
         this.clientId = clientId;
         this.prenom = prenom;
         this.nom = nom;

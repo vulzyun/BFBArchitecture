@@ -2,30 +2,25 @@ spring:
   application:
     name: BFBManagement
     
-  # Configuration PostgreSQL
+  # Configuration PostgreSQL (tables existantes)
   datasource:
-    url: jdbc:postgresql://188.166.77.14:5432/BFBArchitecture?sslmode=disable&connectTimeout=10
+    url: jdbc:postgresql://188.166.77.14:5432/BFBArchitecture
     driver-class-name: org.postgresql.Driver
     username: postgres
-    password: postgres
-    hikari:
-      connection-timeout: 20000
-      maximum-pool-size: 5
+    password: MZS%9Z1bXPem$Q
     
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: none  # ✅ none = n'effectue aucune validation ni modification du schéma
     show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-  # Flyway migration automatique
+  # Flyway DÉSACTIVÉ car tables existent déjà
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
+    enabled: false  # ⬅️ IMPORTANT : false car tables déjà créées
         
   # Configuration Swagger/OpenAPI
   springdoc:

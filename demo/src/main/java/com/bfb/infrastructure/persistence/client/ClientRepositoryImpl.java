@@ -50,6 +50,7 @@ public class ClientRepositoryImpl implements ClientRepository {
             .map(this::toDomain);
     }
 
+
     @Override
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
