@@ -1,5 +1,6 @@
 package com.bfb.interfaces.rest.contract.dto;
 
+import com.bfb.interfaces.rest.validation.ValidDateRange;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
@@ -12,6 +13,7 @@ import java.util.UUID;
  * Includes comprehensive validation for business rules.
  */
 @Schema(description = "Data required to create a new rental contract")
+@ValidDateRange(message = "Start date must be before end date")
 public record CreateContractRequest(
     @NotNull(message = "Client ID is required")
     @Schema(

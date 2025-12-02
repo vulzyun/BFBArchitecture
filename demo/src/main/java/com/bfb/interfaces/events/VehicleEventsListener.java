@@ -4,6 +4,8 @@ import com.bfb.business.contract.service.ContractService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,7 +34,7 @@ public class VehicleEventsListener {
     )
     @ApiResponse(responseCode = "202", description = "Event processed, contracts cancelled")
     public ResponseEntity<VehicleMarkedDownResponse> handleVehicleMarkedDown(
-            @RequestBody VehicleMarkedDownRequest request) {
+            @Valid @RequestBody VehicleMarkedDownRequest request) {
         
         int canceledCount = contractService.cancelPendingContractsForVehicle(request.vehicleId());
         
@@ -44,7 +46,10 @@ public class VehicleEventsListener {
     /**
      * Request DTO for "vehicle marked as broken" event.
      */
-    public record VehicleMarkedDownRequest(UUID vehicleId) {}
+    public record VehicleMarkedDownRequest(
+        @NotNull(message = "Vehicle ID is required")
+        UUID vehicleId
+    ) {}
     
     /**
      * Response DTO for "vehicle marked as broken" event.
