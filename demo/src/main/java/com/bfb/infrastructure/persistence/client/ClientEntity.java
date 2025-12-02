@@ -10,90 +10,87 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/**
- * JPA entity for client persistence.
- */
 @Entity
 @Table(name = "clients")
 public class ClientEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "client_id")
-    private UUID clientId;
+    @Column(name = "id")
+    private UUID id;
 
-    @Column(nullable = false, length = 100)
-    private String prenom;
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
 
-    @Column(nullable = false, length = 100)
-    private String nom;
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
 
     @Column(length = 255)
-    private String adresse;
+    private String address;
 
-    @Column(name = "num_permis", nullable = false, length = 50)
-    private String numPermis;
+    @Column(name = "license_number", nullable = false, length = 50)
+    private String licenseNumber;
 
-    @Column(name = "date_naissance", nullable = false)
-    private LocalDate dateNaissance;
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
 
     public ClientEntity() {
     }
 
-    public ClientEntity(UUID clientId, String prenom, String nom, String adresse, String numPermis, LocalDate dateNaissance) {
-        this.clientId = clientId;
-        this.prenom = prenom;
-        this.nom = nom;
-        this.adresse = adresse;
-        this.numPermis = numPermis;
-        this.dateNaissance = dateNaissance;
+    public ClientEntity(UUID id, String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.licenseNumber = licenseNumber;
+        this.birthDate = birthDate;
     }
 
     public UUID getId() {
-        return clientId;
+        return id;
     }
 
-    public void setId(UUID clientId) {
-        this.clientId = clientId;
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public String getPrenom() {
-        return prenom;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getNom() {
-        return nom;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
-    public String getAdresse() {
-        return adresse;
+    public String getAddress() {
+        return address;
     }
 
-    public void setAdresse(String adresse) {
-        this.adresse = adresse;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
-    public String getNumPermis() {
-        return numPermis;
+    public String getLicenseNumber() {
+        return licenseNumber;
     }
 
-    public void setNumPermis(String numPermis) {
-        this.numPermis = numPermis;
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
     }
 
-    public LocalDate getDateNaissance() {
-        return dateNaissance;
+    public LocalDate getBirthDate() {
+        return birthDate;
     }
 
-    public void setDateNaissance(LocalDate dateNaissance) {
-        this.dateNaissance = dateNaissance;
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 }

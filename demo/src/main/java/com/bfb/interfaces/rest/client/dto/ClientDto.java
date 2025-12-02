@@ -4,26 +4,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * DTO for client response.
- */
 @Schema(description = "Client representation")
 public record ClientDto(
     @Schema(description = "Client unique identifier")
     UUID id,
     
     @Schema(description = "Client first name")
-    String prenom,
+    String firstName,
     
     @Schema(description = "Client last name")
-    String nom,
+    String lastName,
     
     @Schema(description = "Client address")
-    String adresse,
+    String address,
     
     @Schema(description = "Driver's license number")
-    String numPermis,
+    String licenseNumber,
     
     @Schema(description = "Client date of birth")
-    LocalDate dateNaissance
+    LocalDate birthDate
 ) {}

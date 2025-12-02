@@ -12,9 +12,6 @@ import org.springframework.stereotype.Component;
 import com.bfb.business.client.model.Client;
 import com.bfb.business.client.service.ClientRepository;
 
-/**
- * Implementation of ClientRepository using JPA.
- */
 @Component
 public class ClientRepositoryImpl implements ClientRepository {
 
@@ -60,26 +57,25 @@ public class ClientRepositoryImpl implements ClientRepository {
         return jpaRepository.existsById(id);
     }
 
-    // Mapping methods
     private ClientEntity toEntity(Client client) {
         return new ClientEntity(
             client.getId(),
-            client.getPrenom(),
-            client.getNom(),
-            client.getAdresse(),
-            client.getNumPermis(),
-            client.getDateNaissance()
+            client.getFirstName(),
+            client.getLastName(),
+            client.getAddress(),
+            client.getLicenseNumber(),
+            client.getBirthDate()
         );
     }
 
     private Client toDomain(ClientEntity entity) {
         return new Client(
             entity.getId(),
-            entity.getPrenom(),
-            entity.getNom(),
-            entity.getAdresse(),
-            entity.getNumPermis(),
-            entity.getDateNaissance()
+            entity.getFirstName(),
+            entity.getLastName(),
+            entity.getAddress(),
+            entity.getLicenseNumber(),
+            entity.getBirthDate()
         );
     }
 }

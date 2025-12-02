@@ -5,12 +5,10 @@ import com.bfb.business.client.model.Client;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Business service for client management.
- */
 @Service
 @Transactional
 public class ClientService {
@@ -21,8 +19,8 @@ public class ClientService {
         this.clientRepository = clientRepository;
     }
 
-    public Client create(String prenom, String nom, String adresse, String numPermis, java.time.LocalDate dateNaissance) {
-        Client client = new Client(null, prenom, nom, adresse, numPermis, dateNaissance);
+    public Client create(String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
+        Client client = new Client(null, firstName, lastName, address, licenseNumber, birthDate);
         return clientRepository.save(client);
     }
 
@@ -46,14 +44,13 @@ public class ClientService {
         return clientRepository.findById(id).isPresent();
     }
 
-    public Client update(UUID id, String prenom, String nom, String adresse, String numPermis, java.time.LocalDate dateNaissance) {
+    public Client update(UUID id, String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
         Client client = findById(id);
-        
-        client.setPrenom(prenom);
-        client.setNom(nom);
-        client.setAdresse(adresse);
-        client.setNumPermis(numPermis);
-        client.setDateNaissance(dateNaissance);
+        client.setFirstName(firstName);
+        client.setLastName(lastName);
+        client.setAddress(address);
+        client.setLicenseNumber(licenseNumber);
+        client.setBirthDate(birthDate);
         return clientRepository.save(client);
     }
 

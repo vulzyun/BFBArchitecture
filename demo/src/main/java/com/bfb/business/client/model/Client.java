@@ -4,60 +4,67 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public class Client {
-    private UUID clientId; 
-    private String prenom;
-    private String nom;
-    private String adresse;
-    private String numPermis;
-    private LocalDate dateNaissance;
+    private UUID id;
+    private String firstName;
+    private String lastName;
+    private String address;
+    private String licenseNumber;
+    private LocalDate birthDate;
 
-    // Constructeurs
-    public Client(UUID clientId, String prenom, String nom,String adresse,String numPermis, LocalDate dateNaissance) {
-        this.clientId = clientId;
-        this.prenom = prenom;
-        this.nom = nom;
-        this.adresse = adresse;
-        this.numPermis = numPermis;
-        this.dateNaissance = dateNaissance;
+    public Client(UUID id, String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.licenseNumber = licenseNumber;
+        this.birthDate = birthDate;
     }
 
     public UUID getId() {
-        return clientId;
+        return id;
     }
 
-    public void setId(UUID clientId) {
-        this.clientId = clientId;
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public String getNom() {
-        return nom;
-    }
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-    public String getPrenom() {
-        return prenom;
-    }
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
-    }
-    public String getAdresse() {
-        return adresse;
-    }
-    public void setAdresse(String adresse) {
-        this.adresse = adresse;
-    }
-    public String getNumPermis() {
-        return numPermis;
-    }
-    public void setNumPermis(String numPermis) {
-        this.numPermis = numPermis;
-    }
-    public LocalDate getDateNaissance() {
-        return dateNaissance;
-    }
-    public void setDateNaissance(LocalDate dateNaissance) {
-        this.dateNaissance = dateNaissance;
+    public String getFirstName() {
+        return firstName;
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
 }
