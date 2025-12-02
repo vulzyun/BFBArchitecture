@@ -5,6 +5,8 @@ import com.bfb.business.contract.model.Contract;
 import com.bfb.business.contract.model.ContractStatus;
 import com.bfb.business.contract.validation.*;
 import com.bfb.business.vehicle.model.VehicleStatus;
+import com.bfb.business.vehicle.service.VehicleService;
+import com.bfb.business.client.service.ClientService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,10 +31,10 @@ class ContractServiceTest {
     private ContractRepository contractRepository;
 
     @Mock
-    private VehicleStatusPort vehicleStatusPort;
+    private VehicleService vehicleService;
 
     @Mock
-    private ClientExistencePort clientExistencePort;
+    private ClientService clientService;
 
     private ContractValidationChain validationChain;
     private ContractService contractService;
@@ -46,8 +48,8 @@ class ContractServiceTest {
     void setUp() {
         // Create real validators with mocked dependencies
         DateValidator dateValidator = new DateValidator();
-        ClientExistenceValidator clientExistenceValidator = new ClientExistenceValidator(clientExistencePort);
-        VehicleAvailabilityValidator vehicleAvailabilityValidator = new VehicleAvailabilityValidator(vehicleStatusPort);
+        ClientExistenceValidator clientExistenceValidator = new ClientExistenceValidator(clientService);
+        VehicleAvailabilityValidator vehicleAvailabilityValidator = new VehicleAvailabilityValidator(vehicleService);
         OverlapValidator overlapValidator = new OverlapValidator(contractRepository);
         
         validationChain = new ContractValidationChain(
@@ -70,8 +72,8 @@ class ContractServiceTest {
     @Test
     void createContract_Success() {
         // Given
-        when(clientExistencePort.existsById(clientId)).thenReturn(true);
-        when(vehicleStatusPort.getStatus(vehicleId)).thenReturn(VehicleStatus.AVAILABLE);
+        when(clientService.exists(clientId)).thenReturn(true);
+        when(vehicleService.getStatus(vehicleId)).thenReturn(VehicleStatus.AVAILABLE);
         when(contractRepository.findOverlappingContracts(vehicleId, startDate, endDate))
             .thenReturn(Collections.emptyList());
         when(contractRepository.save(any(Contract.class)))
@@ -92,8 +94,8 @@ class ContractServiceTest {
         assertEquals(endDate, result.getEndDate());
         assertEquals(ContractStatus.PENDING, result.getStatus());
         
-        verify(clientExistencePort).existsById(clientId);
-        verify(vehicleStatusPort).getStatus(vehicleId);
+        verify(clientService).exists(clientId);
+        verify(vehicleService).getStatus(vehicleId);
         verify(contractRepository).findOverlappingContracts(vehicleId, startDate, endDate);
         verify(contractRepository).save(any(Contract.class));
     }
@@ -109,44 +111,44 @@ class ContractServiceTest {
             contractService.create(clientId, vehicleId, invalidStartDate, invalidEndDate)
         );
         
-        verifyNoInteractions(clientExistencePort, vehicleStatusPort, contractRepository);
+        verifyNoInteractions(clientService, vehicleService, contractRepository);
     }
 
     @Test
     void createContract_ClientNotFound_ThrowsClientUnknownException() {
         // Given
-        when(clientExistencePort.existsById(clientId)).thenReturn(false);
+        when(clientService.exists(clientId)).thenReturn(false);
 
         // When & Then
         assertThrows(ClientUnknownException.class, () ->
             contractService.create(clientId, vehicleId, startDate, endDate)
         );
         
-        verify(clientExistencePort).existsById(clientId);
-        verifyNoInteractions(vehicleStatusPort, contractRepository);
+        verify(clientService).exists(clientId);
+        verifyNoInteractions(vehicleService, contractRepository);
     }
 
     @Test
     void createContract_VehicleBroken_ThrowsVehicleUnavailableException() {
         // Given
-        when(clientExistencePort.existsById(clientId)).thenReturn(true);
-        when(vehicleStatusPort.getStatus(vehicleId)).thenReturn(VehicleStatus.BROKEN);
+        when(clientService.exists(clientId)).thenReturn(true);
+        when(vehicleService.getStatus(vehicleId)).thenReturn(VehicleStatus.BROKEN);
 
         // When & Then
         assertThrows(VehicleUnavailableException.class, () ->
             contractService.create(clientId, vehicleId, startDate, endDate)
         );
         
-        verify(clientExistencePort).existsById(clientId);
-        verify(vehicleStatusPort).getStatus(vehicleId);
+        verify(clientService).exists(clientId);
+        verify(vehicleService).getStatus(vehicleId);
         verifyNoInteractions(contractRepository);
     }
 
     @Test
     void createContract_OverlappingContract_ThrowsOverlapException() {
         // Given
-        when(clientExistencePort.existsById(clientId)).thenReturn(true);
-        when(vehicleStatusPort.getStatus(vehicleId)).thenReturn(VehicleStatus.AVAILABLE);
+        when(clientService.exists(clientId)).thenReturn(true);
+        when(vehicleService.getStatus(vehicleId)).thenReturn(VehicleStatus.AVAILABLE);
         
         Contract existingContract = new Contract(
             UUID.randomUUID(), UUID.randomUUID(), vehicleId,

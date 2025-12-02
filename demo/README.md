@@ -2,49 +2,80 @@
 
 ## 📋 Vue d'ensemble
 
-MVP implémenté en **TDD (Test-Driven Development)** pour la gestion des contrats de location de véhicules avec architecture hexagonale (Ports & Adapters).
+MVP implémenté en **TDD (Test-Driven Development)** pour la gestion des contrats de location de véhicules avec **architecture multi-couches (3-tier)**.
 
 ### 🎯 Objectifs
 - Gestion complète du cycle de vie des contrats
 - Règles métier strictes (chevauchements, transitions d'état, disponibilité)
-- Architecture découplée prête pour l'intégration avec les domaines Véhicules et Clients
+- Architecture en couches claire et maintenable
+- Communication directe entre services métier
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture Multi-Couches (3-Tier)
 
-### Couches
+### Structure des Couches
 
 ```
-com.BFBManagement/
-├── architecture.contrats.domain/    # Domain layer (Entities, Repository, Règles pures)
-│   ├── Contrat.java               # Entity JPA
-│   ├── ContratRepository.java      # Spring Data JPA
-│   ├── EtatContrat.java           # Enum états
-│   └── Rules.java                 # Règles métier pures (stateless)
+com.bfb/
+├── interfaces/                     # Couche Présentation (REST API)
+│   └── rest/
+│       ├── contract/              # Endpoints contrats
+│       │   ├── ContractController.java
+│       │   ├── dto/               # DTOs (requêtes/réponses)
+│       │   └── mapper/            # Mappers Entity ↔ DTO
+│       ├── vehicle/               # Endpoints véhicules
+│       └── client/                # Endpoints clients
 │
-├── business.contrats/              # Business layer (Services, Ports, Adapters)
-│   ├── ContratService.java        # Service métier principal
-│   ├── ports/                     # Interfaces de découplage
-│   │   ├── VehicleStatusPort.java
-│   │   └── ClientExistencePort.java
-│   ├── adapters/                  # Implémentations stub (temporaires)
-│   │   ├── InMemoryVehicleStatusAdapter.java
-│   │   └── InMemoryClientAdapter.java
-│   └── exceptions/                # Exceptions métier
-│       ├── ValidationException.java
-│       ├── OverlapException.java
-│       ├── VehicleUnavailableException.java
-│       ├── ClientUnknownException.java
-│       ├── TransitionNotAllowedException.java
-│       └── ContratNotFoundException.java
+├── business/                       # Couche Métier (Business Logic)
+│   ├── contract/
+│   │   ├── service/
+│   │   │   ├── ContractService.java
+│   │   │   └── ContractRepository.java (interface)
+│   │   ├── model/                 # Modèles du domaine
+│   │   ├── validation/            # Chain of Responsibility
+│   │   └── exception/             # Exceptions métier
+│   ├── vehicle/
+│   │   └── service/
+│   │       ├── VehicleService.java
+│   │       └── VehicleRepository.java (interface)
+│   └── client/
+│       └── service/
+│           ├── ClientService.java
+│           └── ClientRepository.java (interface)
 │
-└── presentation.contrats/          # Presentation layer (REST API, DTOs)
-    ├── ContratController.java      # REST Controller
-    ├── CreateContratDto.java       # DTO création
-    ├── ContratDto.java            # DTO réponse
-    ├── ContratMapper.java         # Entity <-> DTO
-    └── GlobalExceptionHandler.java # Gestion erreurs HTTP
+└── infrastructure/                 # Couche Données (Persistence)
+    └── persistence/
+        ├── contract/              # Implémentation JPA contrats
+        │   ├── ContractEntity.java
+        │   ├── ContractJpaRepository.java
+        │   └── ContractRepositoryImpl.java
+        ├── vehicle/               # Implémentation JPA véhicules
+        └── client/                # Implémentation JPA clients
+```
+
+### Flux de Communication
+
+```
+┌─────────────────────────────────────┐
+│   PRÉSENTATION (Controllers)         │  ← REST API, DTOs
+│   - ContractController               │
+│   - VehicleController                │
+│   - ClientController                 │
+└──────────────┬──────────────────────┘
+               │ appelle ↓
+┌──────────────▼──────────────────────┐
+│   MÉTIER (Services)                  │  ← Logique métier
+│   - ContractService ──→ VehicleService
+│                     ──→ ClientService │
+└──────────────┬──────────────────────┘
+               │ utilise ↓
+┌──────────────▼──────────────────────┐
+│   DONNÉES (Repositories)             │  ← Persistance JPA
+│   - ContractRepositoryImpl           │
+│   - VehicleRepositoryImpl            │
+│   - ClientRepositoryImpl             │
+└─────────────────────────────────────┘
 ```
 
 ### États et Transitions
