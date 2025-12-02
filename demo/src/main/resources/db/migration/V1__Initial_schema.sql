@@ -3,11 +3,14 @@
 
 -- Clients table
 CREATE TABLE clients (
-    id UUID NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT uk_client_email UNIQUE (email)
+    client_id UUID NOT NULL,
+    prenom VARCHAR(100) NOT NULL,
+    nom VARCHAR(100) NOT NULL,
+    adresse VARCHAR(255),
+    num_permis VARCHAR(50) NOT NULL,
+    date_naissance DATE NOT NULL,
+    PRIMARY KEY (client_id),
+    CONSTRAINT uk_client_num_permis UNIQUE (num_permis)
 );
 
 -- Vehicles table
@@ -34,6 +37,6 @@ CREATE TABLE contracts (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_client_email ON clients(email);
+CREATE INDEX idx_client_num_permis ON clients(num_permis);
 CREATE INDEX idx_vehicle_dates ON contracts(vehicle_id, start_date, end_date);
 CREATE INDEX idx_contract_status ON contracts(status);
