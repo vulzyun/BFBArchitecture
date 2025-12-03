@@ -19,7 +19,7 @@ public record CreateVehicleRequest(
     @Size(min = 2, max = 50, message = "Brand must be between 2 and 50 characters")
     @Schema(
         description = "Vehicle brand/manufacturer (2-50 characters)",
-        example = "Toyota",
+        example = "Ford",
         minLength = 2,
         maxLength = 50
     )
@@ -29,7 +29,7 @@ public record CreateVehicleRequest(
     @Size(min = 1, max = 50, message = "Model must be between 1 and 50 characters")
     @Schema(
         description = "Vehicle model (1-50 characters)",
-        example = "Corolla",
+        example = "Explorer",
         minLength = 1,
         maxLength = 50
     )
@@ -65,7 +65,7 @@ public record CreateVehicleRequest(
     )
     String registrationPlate,
 
-    @NotBlank(message = "Purchase date is required")
+    @NotNull(message = "Purchase date is required")
     @Past(message = "Purchase date must be in the past")
     @Schema(
             description = "Client date of birth - must be at least 18 years old",
