@@ -8,8 +8,13 @@ import com.bfb.interfaces.rest.vehicle.dto.CreateVehicleRequest;
 import com.bfb.interfaces.rest.vehicle.dto.VehicleDto;
 import com.bfb.interfaces.rest.vehicle.mapper.VehicleMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,15 +49,22 @@ public class VehicleController extends BaseRestController<Vehicle, VehicleDto> {
 
     @GetMapping
     @Operation(summary = "Get all vehicles")
-    public ResponseEntity<org.springframework.data.domain.Page<VehicleDto>> getAll(
-        @RequestParam(required = false) VehicleStatus status,
-        org.springframework.data.domain.Pageable pageable
+    public ResponseEntity<Page<VehicleDto>> getAll(
+        @RequestParam(defaultValue = "0") @Parameter(description = "Page number") int page,
+        @RequestParam(defaultValue = "50") @Parameter(description = "Page size") int size,
+        @RequestParam(defaultValue = "brand,asc") @Parameter(description = "Sort criteria") String sort,
+        @RequestParam(required = false) VehicleStatus status
     ) {
-        org.springframework.data.domain.Page<Vehicle> vehicles = status != null 
-            ? vehicleService.findByStatus(status, pageable)
-            : vehicleService.findAll(pageable);
-        org.springframework.data.domain.Page<VehicleDto> dtos = vehicles.map(vehicleMapper::toDto);
-        return okPage(dtos);
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, direction, sortParams[0]);
+        Page<Vehicle> vehicles = status != null
+                ? vehicleService.findByStatus(status, pageable)
+                : vehicleService.findAll(pageable);
+        return okPage(vehicles.map(vehicleMapper::toDto));
     }
 
     @PatchMapping("/{id}/mark-broken")

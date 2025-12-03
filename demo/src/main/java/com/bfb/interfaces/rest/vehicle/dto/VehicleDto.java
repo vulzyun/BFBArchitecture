@@ -2,6 +2,8 @@ package com.bfb.interfaces.rest.vehicle.dto;
 
 import com.bfb.business.vehicle.model.VehicleStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+
 import java.util.UUID;
 import java.time.LocalDate;
 
