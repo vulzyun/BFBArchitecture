@@ -45,46 +45,21 @@ public class ContractService {
         return contractRepository.save(contract);
     }
 
-    /**
-     * Terminates a contract (IN_PROGRESS/LATE → COMPLETED).
-     * State validation is performed by the Contract entity.
-     * 
-     * @param contractId the contract ID
-     * @return the updated contract
-     * @throws ContractNotFoundException if contract not found
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public Contract terminate(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        contract.terminate(); // State pattern handles validation
+        contract.terminate();
         return contractRepository.save(contract);
     }
 
-    /**
-     * Cancels a contract (PENDING → CANCELLED).
-     * State validation is performed by the Contract entity.
-     * 
-     * @param contractId the contract ID
-     * @return the updated contract
-     * @throws ContractNotFoundException if contract not found
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public Contract cancel(UUID contractId) {
         Contract contract = findByIdOrThrow(contractId);
-        contract.cancel(); // State pattern handles validation
+        contract.cancel();
         return contractRepository.save(contract);
     }
 
-    /**
-     * Marks all overdue contracts as LATE.
-     * Uses optimized query to find only contracts that are IN_PROGRESS and past their end date.
-     * 
-     * @return the number of contracts marked as late
-     */
     public int markLateIfOverdue() {
         LocalDate today = LocalDate.now();
         
-        // ✅ OPTIMIZED: Only load contracts that are actually overdue
         List<Contract> overdueContracts = contractRepository.findOverdueContracts(
             ContractStatus.IN_PROGRESS, 
             today
@@ -134,8 +109,6 @@ public class ContractService {
             org.springframework.data.domain.Pageable pageable) {
         return contractRepository.findByCriteria(clientId, vehicleId, status, pageable);
     }
-
-    // === Helpers ===
 
     private Contract findByIdOrThrow(UUID id) {
         return contractRepository.findById(id)

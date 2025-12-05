@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository interface for Contract persistence operations.
- * Defined in business layer, implemented in infrastructure layer.
- */
 public interface ContractRepository {
     Contract save(Contract contract);
     Optional<Contract> findById(UUID id);
@@ -23,13 +19,5 @@ public interface ContractRepository {
     List<Contract> findByStatus(ContractStatus status);
     List<Contract> findByVehicleIdAndStatus(UUID vehicleId, ContractStatus status);
     
-    /**
-     * Finds all contracts in a given status with end date before the specified date.
-     * Optimized query for finding overdue contracts.
-     * 
-     * @param status the contract status to filter by
-     * @param date the date to compare end dates against
-     * @return list of contracts matching the criteria
-     */
     List<Contract> findOverdueContracts(ContractStatus status, LocalDate date);
 }

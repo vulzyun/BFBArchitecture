@@ -1,5 +1,6 @@
 package com.bfb.business.vehicle.service;
 
+import com.bfb.business.vehicle.exception.DuplicateVehicleException;
 import com.bfb.business.vehicle.exception.VehicleNotFoundException;
 import com.bfb.business.vehicle.model.Vehicle;
 import com.bfb.business.vehicle.model.VehicleStatus;
@@ -21,6 +22,13 @@ public class VehicleService {
     }
 
     public Vehicle create(String brand, String model, String motorization, String color, String registrationPlate, LocalDate purchaseDate) {
+        if (vehicleRepository.existsByRegistrationPlate(registrationPlate)) {
+            throw new DuplicateVehicleException(
+                String.format("A vehicle with registration plate '%s' already exists. " +
+                    "Each registration plate must be unique.", registrationPlate)
+            );
+        }
+        
         Vehicle vehicle = new Vehicle(null, brand, model, motorization, color, registrationPlate, purchaseDate, VehicleStatus.AVAILABLE);
         return vehicleRepository.save(vehicle);
     }

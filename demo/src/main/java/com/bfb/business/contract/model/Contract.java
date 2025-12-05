@@ -24,7 +24,6 @@ public class Contract {
         this.status = status;
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -81,25 +80,14 @@ public class Contract {
         this.status = this.status.transitionTo(ContractStatus.COMPLETED);
     }
 
-    /**
-     * Cancels the contract by transitioning from PENDING to CANCELLED.
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public void cancel() {
         this.status = this.status.transitionTo(ContractStatus.CANCELLED);
     }
 
-    /**
-     * Marks the contract as late by transitioning from IN_PROGRESS to LATE.
-     * @throws TransitionNotAllowedException if transition is not allowed
-     */
     public void markLate() {
         this.status = this.status.transitionTo(ContractStatus.LATE);
     }
 
-    /**
-     * Checks if the contract is actively occupying the vehicle.
-     */
     public boolean isOccupying() {
         return status == ContractStatus.PENDING 
             || status == ContractStatus.IN_PROGRESS 

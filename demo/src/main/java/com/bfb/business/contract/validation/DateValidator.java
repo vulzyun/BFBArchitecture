@@ -3,9 +3,6 @@ package com.bfb.business.contract.validation;
 import com.bfb.business.contract.exception.ValidationException;
 import org.springframework.stereotype.Component;
 
-/**
- * Validates that the start date is before the end date.
- */
 @Component
 public class DateValidator implements ContractValidator {
 

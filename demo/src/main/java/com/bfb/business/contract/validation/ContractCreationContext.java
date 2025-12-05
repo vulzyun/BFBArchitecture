@@ -3,9 +3,6 @@ package com.bfb.business.contract.validation;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * Context object containing all data needed for contract creation validation.
- */
 public class ContractCreationContext {
     private final UUID clientId;
     private final UUID vehicleId;

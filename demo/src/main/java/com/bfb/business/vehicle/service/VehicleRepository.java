@@ -9,10 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository interface for Vehicle persistence operations.
- * Defined in business layer, implemented in infrastructure layer.
- */
 public interface VehicleRepository {
     Vehicle save(Vehicle vehicle);
     Optional<Vehicle> findById(UUID id);
@@ -22,4 +18,6 @@ public interface VehicleRepository {
     Page<Vehicle> findByStatus(VehicleStatus status, Pageable pageable);
     void deleteById(UUID id);
     boolean existsById(UUID id);
+    
+    boolean existsByRegistrationPlate(String registrationPlate);
 }
