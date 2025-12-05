@@ -37,25 +37,12 @@ class ContractControllerIntegrationTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() throws Exception {
-        // Create a test client
-        String clientResponse = mockMvc.perform(post("/api/v1/clients")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Test Client\",\"email\":\"test" + System.nanoTime() + "@example.com\"}"))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-        clientId = UUID.fromString(objectMapper.readTree(clientResponse).get("id").asText());
-
-        // Create a test vehicle
-        String vehicleResponse = mockMvc.perform(post("/api/v1/vehicles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"brand\":\"Toyota\",\"model\":\"Corolla\"}"))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-        vehicleId = UUID.fromString(objectMapper.readTree(vehicleResponse).get("id").asText());
+        // Use existing sample data from V5 migration instead of creating new test data
+        // Client ID from V5__Sample_data.sql: Jean Dupont
+        clientId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        
+        // Vehicle ID from V5__Sample_data.sql: Peugeot 3008
+        vehicleId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     }
 
     @Test
@@ -96,7 +83,7 @@ class ContractControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.title").value("Validation failed"));
+            .andExpect(jsonPath("$.title").value("Parameter validation failed"));
     }
 
     @Test
@@ -306,9 +293,10 @@ class ContractControllerIntegrationTest {
         );
         
         // Create another vehicle for second contract
+        long timestamp2 = System.currentTimeMillis();
         String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"brand\":\"Honda\",\"model\":\"Civic\"}"))
+                .content("{\"brand\":\"Honda\",\"model\":\"Civic\",\"motorization\":\"Petrol\",\"color\":\"Red\",\"registrationPlate\":\"TEST2-" + timestamp2 + "\",\"purchaseDate\":\"2020-01-01\"}"))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -345,9 +333,10 @@ class ContractControllerIntegrationTest {
     void searchContracts_WithStatusFilter() throws Exception {
         // Given - create contracts with different statuses
         // Create another vehicle for second contract
+        long timestamp3 = System.currentTimeMillis();
         String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"brand\":\"Honda\",\"model\":\"Accord\"}"))
+                .content("{\"brand\":\"Honda\",\"model\":\"Accord\",\"motorization\":\"Hybrid\",\"color\":\"Silver\",\"registrationPlate\":\"TEST3-" + timestamp3 + "\",\"purchaseDate\":\"2020-01-01\"}"))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
