@@ -1,6 +1,8 @@
 package com.bfb.interfaces.rest.config;
 
 import com.bfb.business.contract.exception.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +21,8 @@ import static com.bfb.interfaces.rest.config.ApiConstants.ErrorTypes;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({
         ContractNotFoundException.class,
@@ -67,7 +71,10 @@ public class GlobalExceptionHandler {
         OverlapException.class, 
         VehicleUnavailableException.class, 
         ClientUnknownException.class,
-        com.bfb.business.client.exception.DuplicateEmailException.class
+        com.bfb.business.client.exception.DuplicateEmailException.class,
+        com.bfb.business.client.exception.DuplicateClientException.class,
+        com.bfb.business.client.exception.DuplicateLicenseException.class,
+        com.bfb.business.vehicle.exception.DuplicateVehicleException.class
     })
     public ProblemDetail handleConflict(RuntimeException ex) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
@@ -92,6 +99,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
+        log.error("Unexpected error occurred", ex);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.INTERNAL_SERVER_ERROR, 
             ErrorMessages.INTERNAL_ERROR

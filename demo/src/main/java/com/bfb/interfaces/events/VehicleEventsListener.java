@@ -1,9 +1,7 @@
 package com.bfb.interfaces.events;
 
 import com.bfb.business.contract.service.ContractService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
@@ -15,10 +13,11 @@ import java.util.UUID;
 /**
  * Internal REST listener for vehicle-related events.
  * These endpoints are designed to be called by other internal services.
+ * Hidden from public Swagger documentation for security reasons.
  */
 @RestController
 @RequestMapping("/internal/events/vehicles")
-@Tag(name = "Vehicle Events (Internal)", description = "Internal API for vehicle events")
+@Hidden
 public class VehicleEventsListener {
 
     private final ContractService contractService;
@@ -28,11 +27,6 @@ public class VehicleEventsListener {
     }
 
     @PostMapping("/marked-down")
-    @Operation(
-        summary = "Vehicle marked as broken", 
-        description = "Cancels all PENDING contracts for the vehicle when it's marked as broken"
-    )
-    @ApiResponse(responseCode = "202", description = "Event processed, contracts cancelled")
     public ResponseEntity<VehicleMarkedDownResponse> handleVehicleMarkedDown(
             @Valid @RequestBody VehicleMarkedDownRequest request) {
         

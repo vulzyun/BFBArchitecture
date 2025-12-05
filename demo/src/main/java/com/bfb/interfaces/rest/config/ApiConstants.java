@@ -1,22 +1,11 @@
 package com.bfb.interfaces.rest.config;
 
-/**
- * Centralized constants for API configuration and error handling.
- */
 public final class ApiConstants {
     
-    private ApiConstants() {
-        // Utility class - prevent instantiation
-    }
+    private ApiConstants() {}
 
-    /**
-     * Base URI for API error documentation.
-     */
     public static final String ERROR_BASE_URI = "https://bfbmanagement.com/errors";
 
-    /**
-     * Standard error type URIs for RFC 7807 Problem Details.
-     */
     public static final class ErrorTypes {
         private ErrorTypes() {}
         
@@ -27,9 +16,6 @@ public final class ApiConstants {
         public static final String INTERNAL_ERROR = ERROR_BASE_URI + "/internal";
     }
 
-    /**
-     * Standard error titles.
-     */
     public static final class ErrorTitles {
         private ErrorTitles() {}
         
