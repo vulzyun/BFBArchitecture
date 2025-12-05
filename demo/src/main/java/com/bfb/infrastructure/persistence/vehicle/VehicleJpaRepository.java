@@ -8,10 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Spring Data JPA repository for Vehicle.
- */
 public interface VehicleJpaRepository extends JpaRepository<VehicleEntity, UUID> {
     List<VehicleEntity> findByStatus(VehicleStatus status);
     Page<VehicleEntity> findByStatus(VehicleStatus status, Pageable pageable);
+    
+    boolean existsByRegistrationPlate(String registrationPlate);
 }

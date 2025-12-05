@@ -6,10 +6,6 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
 import java.time.Period;
 
-/**
- * Validator implementation for @AdultAge annotation.
- * Validates that a birth date indicates the person is at least the minimum age.
- */
 public class AdultAgeValidator implements ConstraintValidator<AdultAge, LocalDate> {
 
     private int minAge;
@@ -22,7 +18,7 @@ public class AdultAgeValidator implements ConstraintValidator<AdultAge, LocalDat
     @Override
     public boolean isValid(LocalDate birthDate, ConstraintValidatorContext context) {
         if (birthDate == null) {
-            return true; // Let @NotNull handle null checks
+            return true;
         }
 
         LocalDate today = LocalDate.now();

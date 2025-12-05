@@ -5,10 +5,6 @@ import com.bfb.business.vehicle.service.VehicleService;
 import com.bfb.business.vehicle.model.VehicleStatus;
 import org.springframework.stereotype.Component;
 
-/**
- * Validates that the vehicle is available for rental (not broken).
- * Uses VehicleService directly (3-tier architecture).
- */
 @Component
 public class VehicleAvailabilityValidator implements ContractValidator {
 

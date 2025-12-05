@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Validates that no other contracts overlap with the requested period.
- */
 @Component
 public class OverlapValidator implements ContractValidator {
 

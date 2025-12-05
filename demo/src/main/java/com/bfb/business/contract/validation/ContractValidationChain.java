@@ -4,10 +4,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Validation chain that executes all contract validators in order.
- * Uses the Chain of Responsibility pattern.
- */
 @Component
 public class ContractValidationChain {
 
@@ -18,7 +14,6 @@ public class ContractValidationChain {
             ClientExistenceValidator clientExistenceValidator,
             VehicleAvailabilityValidator vehicleAvailabilityValidator,
             OverlapValidator overlapValidator) {
-        // Order matters: fast-fail validations first
         this.validators = List.of(
             dateValidator,
             clientExistenceValidator,
@@ -27,13 +22,6 @@ public class ContractValidationChain {
         );
     }
 
-    /**
-     * Executes all validators in sequence.
-     * Stops at the first validation failure.
-     * 
-     * @param context the validation context
-     * @throws RuntimeException if any validation fails
-     */
     public void validateAll(ContractCreationContext context) {
         validators.forEach(validator -> validator.validate(context));
     }

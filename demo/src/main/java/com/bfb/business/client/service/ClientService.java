@@ -1,6 +1,8 @@
 package com.bfb.business.client.service;
 
 import com.bfb.business.client.exception.ClientNotFoundException;
+import com.bfb.business.client.exception.DuplicateClientException;
+import com.bfb.business.client.exception.DuplicateLicenseException;
 import com.bfb.business.client.model.Client;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,21 @@ public class ClientService {
     }
 
     public Client create(String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
+        if (clientRepository.existsByFirstNameAndLastNameAndBirthDate(firstName, lastName, birthDate)) {
+            throw new DuplicateClientException(
+                String.format("A client with name '%s %s' and birth date '%s' already exists. " +
+                    "Clients must be unique by their full name and birth date.",
+                    firstName, lastName, birthDate)
+            );
+        }
+        
+        if (clientRepository.existsByLicenseNumber(licenseNumber)) {
+            throw new DuplicateLicenseException(
+                String.format("License number '%s' is already registered to another client. " +
+                    "Each license number must be unique.", licenseNumber)
+            );
+        }
+        
         Client client = new Client(null, firstName, lastName, address, licenseNumber, birthDate);
         return clientRepository.save(client);
     }
@@ -46,6 +63,14 @@ public class ClientService {
 
     public Client update(UUID id, String firstName, String lastName, String address, String licenseNumber, LocalDate birthDate) {
         Client client = findById(id);
+        
+        if (clientRepository.existsByLicenseNumberAndIdNot(licenseNumber, id)) {
+            throw new DuplicateLicenseException(
+                String.format("License number '%s' is already registered to another client. " +
+                    "Each license number must be unique.", licenseNumber)
+            );
+        }
+        
         client.setFirstName(firstName);
         client.setLastName(lastName);
         client.setAddress(address);

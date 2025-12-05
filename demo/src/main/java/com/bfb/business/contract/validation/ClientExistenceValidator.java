@@ -4,10 +4,6 @@ import com.bfb.business.contract.exception.ClientUnknownException;
 import com.bfb.business.client.service.ClientService;
 import org.springframework.stereotype.Component;
 
-/**
- * Validates that the client exists in the system.
- * Uses ClientService directly (3-tier architecture).
- */
 @Component
 public class ClientExistenceValidator implements ContractValidator {
 
