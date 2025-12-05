@@ -1,103 +1,61 @@
-# 🏛️ Architecture Hexagonale : Guide Complet et Application dans votre Projet
+# BFB Management System
 
-## 📚 Qu'est-ce que l'Architecture Hexagonale ?
+Vehicle rental management system - Spring Boot 3.5.7, Java 17, DDD/TDD approach.
 
-### 🎯 Définition
+## Quick Start
 
-L'**Architecture Hexagonale** (aussi appelée **Ports & Adapters**) a été inventée par **Alistair Cockburn** en 2005. C'est un pattern architectural qui vise à créer des applications faiblement couplées et facilement testables.
-
-### 🔑 Concept Clé : Isoler le Cœur Métier
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    MONDE EXTÉRIEUR                       │
-│  (APIs REST, Bases de données, Services externes, UI)   │
-└─────────────────────────────────────────────────────────┘
-                          ▲      ▼
-                    ┌─────────────────┐
-                    │    ADAPTERS     │  (Implémentations)
-                    └─────────────────┘
-                          ▲      ▼
-                    ┌─────────────────┐
-                    │      PORTS      │  (Interfaces)
-                    └─────────────────┘
-                          ▲      ▼
-              ┌───────────────────────────────┐
-              │      DOMAINE MÉTIER           │
-              │   (Logique pure, aucune       │
-              │    dépendance technique)      │
-              └───────────────────────────────┘
+```bash
+cd demo
+./mvnw spring-boot:run  # http://localhost:8080
+./mvnw test             # Run 130+ tests
 ```
 
-### 🎨 Pourquoi "Hexagonale" ?
-
-Le terme vient de la représentation graphique en **hexagone** :
-- Le **centre** = Domaine métier (business logic)
-- Les **côtés** = Ports (interfaces)
-- Les **connexions externes** = Adapters (implémentations)
-
-**Note** : Le nombre de côtés n'a pas d'importance ! On pourrait avoir 4, 6, 8 côtés... L'important est le concept.
-
----
-
-## 🏗️ Les 3 Composants Fondamentaux
-
-### 1️⃣ **Le Domaine (Core / Hexagone Central)**
-
-**C'est le CŒUR de votre application**
-- Contient la **logique métier pure**
-- **Aucune dépendance** vers les frameworks (Spring, JPA, etc.)
-- **Aucune connaissance** de l'infrastructure (REST, DB, etc.)
-- Définit ses propres **interfaces (ports)** pour communiquer
-
-**Principes** :
-- ✅ Testable sans Spring, sans base de données
-- ✅ Indépendant de la technologie
-- ✅ Stable et durable
-
-### 2️⃣ **Les Ports (Interfaces)**
-
-**Les contrats de communication**
-- **Ports Entrants (Driving)** : Comment le monde extérieur utilise le domaine
-  - Exemple : `ContratService` (appelé par le Controller)
-- **Ports Sortants (Driven)** : Comment le domaine demande des services externes
-  - Exemple : `VehicleStatusPort`, `ClientExistencePort`
-
-**Analogie** : Les ports USB sur votre ordinateur
-- Votre ordinateur (domaine) définit le port USB (interface)
-- Vous pouvez brancher n'importe quel adaptateur compatible (implémentation)
-
-### 3️⃣ **Les Adapters (Implémentations)**
-
-**Les connecteurs au monde réel**
-- **Adapters Entrants (Driving)** : Déclenchent les opérations
-  - REST Controllers
-  - GraphQL Resolvers
-  - Message Queue Consumers
-  - CLI Commands
-  
-- **Adapters Sortants (Driven)** : Exécutent les actions externes
-  - Repositories JPA
-  - HTTP Clients
-  - Message Queue Producers
-  - File System Access
-
----
-
-## 🔍 Illustration COMPLÈTE dans votre Projet BFBManagement
-
-Analysons **chaque couche** de votre projet :
-
-### 📦 Structure des Packages
+## Architecture
 
 ```
-com.BFBManagement/
-│
-├── 🟦 infrastructure.contrats.domain/    # ❶ DOMAINE
-│   ├── Contrat.java                      # Entité métier
-│   ├── EtatContrat.java                  # Enum états
-│   ├── Rules.java                        # Règles métier PURES
-│   └── ContratRepository.java            # PORT (interface JPA)
+business/       → Domain logic (framework-agnostic)
+infrastructure/ → JPA repositories
+interfaces/rest/→ REST API controllers
+```
+
+## Stack
+
+- Spring Boot 3.5.7, Java 17
+- H2 (dev), PostgreSQL (prod)
+- Hibernate + JPA, Flyway
+- MapStruct, JUnit 5, Mockito
+- SpringDoc OpenAPI
+
+## API
+
+- `POST /api/contracts` - Create contract
+- `GET /api/contracts/{id}` - Get contract
+- `PATCH /api/contracts/{id}/status` - Update status
+- `POST /api/clients` - Create client
+- `GET /api/clients/{id}` - Get client
+- `POST /api/vehicles` - Create vehicle
+- `GET /api/vehicles/{id}` - Get vehicle
+
+Swagger: http://localhost:8080/swagger-ui.html
+
+## Patterns
+
+- Chain of Responsibility (validation)
+- State Pattern (contract status)
+- Repository Pattern
+- Value Objects (Period, Email)
+
+## Documentation
+
+- [Design Patterns](docs/GUIDE_4_DESIGN_PATTERNS.md)
+- [Stack Evolution](docs/GUIDE_5_STACK_TECHNIQUE.md)
+- [Database Journey](docs/GUIDE_3_DATABASE_JOURNEY.md)
+- [Architecture](docs/GUIDE_2_ARCHITECTURE_EVOLUTION.md)
+- [Tech Report](RAPPORT_TECH_LEAD.md)
+
+## Team
+
+Tech Lead: Saad | Developers: Vulzyun, Mohamedlam, Xaymaa
 │
 ├── 🟨 business.contrats/                 # ❷ SERVICES + PORTS
 │   ├── ContratService.java               # Orchestration métier
@@ -139,11 +97,7 @@ com.BFBManagement/
 ┌─────────────────────────────────────────┐
 │  🟩 ADAPTER ENTRANT                      │
 │  ContratController.create()             │
-│  - Reçoit CreateContratDto              │
-│  - Valide avec @Valid                   │
-└──────┬──────────────────────────────────┘
-       │ contratService.create(...)
-       ▼
+
 ┌─────────────────────────────────────────┐
 │  🟨 SERVICE MÉTIER                       │
 │  ContratService.create()                │
