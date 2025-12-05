@@ -12,9 +12,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Spring Data JPA repository for contract database access.
- */
 @Repository
 public interface ContractJpaRepository extends JpaRepository<ContractEntity, UUID> {
 
@@ -52,10 +49,6 @@ public interface ContractJpaRepository extends JpaRepository<ContractEntity, UUI
         Pageable pageable
     );
     
-    /**
-     * Optimized query to find overdue contracts.
-     * Only loads contracts matching both status and date criteria.
-     */
     @Query("SELECT c FROM ContractEntity c WHERE c.status = :status AND c.endDate < :date")
     List<ContractEntity> findOverdueContracts(
         @Param("status") ContractStatus status,

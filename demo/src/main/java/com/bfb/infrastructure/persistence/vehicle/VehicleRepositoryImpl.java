@@ -71,6 +71,11 @@ public class VehicleRepositoryImpl implements VehicleRepository {
         return jpaRepository.existsById(id);
     }
 
+    @Override
+    public boolean existsByRegistrationPlate(String registrationPlate) {
+        return jpaRepository.existsByRegistrationPlate(registrationPlate);
+    }
+
     private VehicleEntity toEntity(Vehicle vehicle) {
         return new VehicleEntity(
             vehicle.getId(),

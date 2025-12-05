@@ -57,6 +57,21 @@ public class ClientRepositoryImpl implements ClientRepository {
         return jpaRepository.existsById(id);
     }
 
+    @Override
+    public boolean existsByFirstNameAndLastNameAndBirthDate(String firstName, String lastName, java.time.LocalDate birthDate) {
+        return jpaRepository.existsByFirstNameAndLastNameAndBirthDate(firstName, lastName, birthDate);
+    }
+
+    @Override
+    public boolean existsByLicenseNumber(String licenseNumber) {
+        return jpaRepository.existsByLicenseNumber(licenseNumber);
+    }
+
+    @Override
+    public boolean existsByLicenseNumberAndIdNot(String licenseNumber, UUID excludeClientId) {
+        return jpaRepository.existsByLicenseNumberAndIdNot(licenseNumber, excludeClientId);
+    }
+
     private ClientEntity toEntity(Client client) {
         return new ClientEntity(
             client.getId(),
