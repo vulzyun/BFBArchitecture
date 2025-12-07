@@ -10,10 +10,6 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: windows-latest
-  
-    defaults:
-      run:
-        working-directory: ./demo
     
     steps:
       - name: Checkout code
@@ -27,9 +23,11 @@ jobs:
           cache: 'maven'
       
       - name: Build with Maven
+        working-directory: ./demo
         run: ./mvnw -B clean compile
         
       - name: Run tests
+        working-directory: ./demo
         run: ./mvnw -B test
       
       - name: Upload Surefire reports
@@ -45,16 +43,17 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Maven Tests
-          path: demo/target/surefire-reports/*.xml
+          path: 'demo/target/surefire-reports/TEST-*.xml'
           reporter: java-junit
           fail-on-error: false
       
       - name: Test Summary
         if: always()
+        shell: pwsh
         run: |
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          if [ -d "target/surefire-reports" ]; then
-            TEST_COUNT=$(find target/surefire-reports -name "TEST-*.xml" | wc -l)
-            echo "- Test suites executed: $TEST_COUNT" >> $GITHUB_STEP_SUMMARY
-            echo "- Test reports uploaded as artifacts" >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "## Test Results" >> $env:GITHUB_STEP_SUMMARY
+          if (Test-Path "demo/target/surefire-reports") {
+            $testCount = (Get-ChildItem "demo/target/surefire-reports" -Filter "TEST-*.xml").Count
+            echo "- Test suites executed: $testCount" >> $env:GITHUB_STEP_SUMMARY
+            echo "- Test reports uploaded as artifacts" >> $env:GITHUB_STEP_SUMMARY
+          }
