@@ -1,21 +1,34 @@
 package com.bfb.interfaces.rest.contract;
 
-import com.bfb.interfaces.rest.contract.dto.CreateContractRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.bfb.business.client.model.Client;
+import com.bfb.business.client.service.ClientRepository;
+import com.bfb.business.vehicle.model.Vehicle;
+import com.bfb.business.vehicle.model.VehicleStatus;
+import com.bfb.business.vehicle.service.VehicleRepository;
+import com.bfb.interfaces.rest.contract.dto.CreateContractRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Integration tests for ContractController.
@@ -32,17 +45,42 @@ class ContractControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ClientRepository clientRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
     private UUID clientId;
     private UUID vehicleId;
 
-    @org.junit.jupiter.api.BeforeEach
-    void setUp() throws Exception {
-        // Use existing sample data from V5 migration instead of creating new test data
-        // Client ID from V5__Sample_data.sql: Jean Dupont
-        clientId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    @BeforeEach
+    void setUp() {
+        // Create test client
+        Client testClient = new Client(
+            null,
+            "John",
+            "Doe",
+            "123 Test Street",
+            "TEST-LICENSE-" + System.currentTimeMillis(),
+            LocalDate.of(1990, 1, 1)
+        );
+        Client savedClient = clientRepository.save(testClient);
+        clientId = savedClient.getId();
         
-        // Vehicle ID from V5__Sample_data.sql: Peugeot 3008
-        vehicleId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        // Create test vehicle
+        Vehicle testVehicle = new Vehicle(
+            null,
+            "Toyota",
+            "Camry",
+            "Hybrid",
+            "Blue",
+            "TEST-" + System.currentTimeMillis(),
+            LocalDate.of(2020, 1, 1),
+            VehicleStatus.AVAILABLE
+        );
+        Vehicle savedVehicle = vehicleRepository.save(testVehicle);
+        vehicleId = savedVehicle.getId();
     }
 
     @Test
