@@ -1,16 +1,20 @@
 package com.bfb.business.client.service;
 
-import com.bfb.business.client.exception.ClientNotFoundException;
-import com.bfb.business.client.exception.DuplicateClientException;
-import com.bfb.business.client.exception.DuplicateLicenseException;
-import com.bfb.business.client.model.Client;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+ 
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.bfb.business.client.exception.ClientNotFoundException;
+import com.bfb.business.client.exception.DuplicateClientException;
+import com.bfb.business.client.exception.DuplicateLicenseException;
+import com.bfb.business.client.model.Client;
+
+    
 @Service
 @Transactional
 public class ClientService {
@@ -33,7 +37,7 @@ public class ClientService {
         if (clientRepository.existsByLicenseNumber(licenseNumber)) {
             throw new DuplicateLicenseException(
                 String.format("License number '%s' is already registered to another client. " +
-                    "Each license number must be unique.", licenseNumber)
+                    "Each license number must be unique", licenseNumber)
             );
         }
         
