@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for ContractController.
  * Tests the full stack with Spring context and H2 database.
+ * Each test creates its own unique test data to ensure complete isolation.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,22 +33,59 @@ class ContractControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private UUID clientId;
-    private UUID vehicleId;
-
-    @org.junit.jupiter.api.BeforeEach
-    void setUp() throws Exception {
-        // Use existing sample data from V5 migration instead of creating new test data
-        // Client ID from V5__Sample_data.sql: Jean Dupont
-        clientId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    /**
+     * Helper method to create a unique client for testing.
+     * Each client has unique identifiers to prevent data conflicts.
+     */
+    private UUID createTestClient() throws Exception {
+        String uniqueSuffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         
-        // Vehicle ID from V5__Sample_data.sql: Peugeot 3008
-        vehicleId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        String clientJson = String.format(
+            "{\"firstName\":\"TestFirst\",\"lastName\":\"TestLast\",\"address\":\"123 Test Street\",\"licenseNumber\":\"LIC-%s\",\"birthDate\":\"1990-05-15\"}",
+            uniqueSuffix
+        );
+        
+        String response = mockMvc.perform(post("/api/v1/clients")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(clientJson))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        
+        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
+    }
+
+    /**
+     * Helper method to create a unique vehicle for testing.
+     * Each vehicle has a unique registration plate to prevent conflicts.
+     */
+    private UUID createTestVehicle() throws Exception {
+        long timestamp = System.currentTimeMillis();
+        String uniquePlate = "TEST-" + timestamp;
+        
+        String vehicleJson = String.format(
+            "{\"brand\":\"TestBrand\",\"model\":\"TestModel\",\"motorization\":\"Petrol\",\"color\":\"Blue\",\"registrationPlate\":\"%s\",\"purchaseDate\":\"2020-01-01\"}",
+            uniquePlate
+        );
+        
+        String response = mockMvc.perform(post("/api/v1/vehicles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+        
+        return UUID.fromString(objectMapper.readTree(response).get("id").asText());
     }
 
     @Test
     void createContract_Success() throws Exception {
-        // Given
+        // Given - create unique test data
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -100,7 +138,11 @@ class ContractControllerIntegrationTest {
 
     @Test
     void createContract_OverlappingDates_ReturnsConflict() throws Exception {
-        // Given - create first contract
+        // Given - create unique test data for this test
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
+        // Create first contract
         LocalDate startDate = LocalDate.now().plusDays(1);
         LocalDate endDate = LocalDate.now().plusDays(8);
         
@@ -135,7 +177,10 @@ class ContractControllerIntegrationTest {
 
     @Test
     void getContractById_Success() throws Exception {
-        // Given - create a contract first
+        // Given - create unique test data and a contract
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -173,7 +218,10 @@ class ContractControllerIntegrationTest {
 
     @Test
     void startContract_Success() throws Exception {
-        // Given - create a pending contract
+        // Given - create unique test data and a pending contract
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -199,7 +247,10 @@ class ContractControllerIntegrationTest {
 
     @Test
     void startContract_AlreadyStarted_ReturnsUnprocessableEntity() throws Exception {
-        // Given - create and start a contract
+        // Given - create unique test data, create and start a contract
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -229,7 +280,10 @@ class ContractControllerIntegrationTest {
 
     @Test
     void terminateContract_Success() throws Exception {
-        // Given - create and start a contract
+        // Given - create unique test data, create and start a contract
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -258,7 +312,10 @@ class ContractControllerIntegrationTest {
 
     @Test
     void cancelContract_Success() throws Exception {
-        // Given - create a pending contract
+        // Given - create unique test data and a pending contract
+        UUID clientId = createTestClient();
+        UUID vehicleId = createTestVehicle();
+        
         CreateContractRequest request = new CreateContractRequest(
             clientId,
             vehicleId,
@@ -284,24 +341,17 @@ class ContractControllerIntegrationTest {
 
     @Test
     void searchContracts_WithoutFilters_ReturnsAllContracts() throws Exception {
-        // Given - create multiple contracts
+        // Given - create unique test data for multiple contracts
+        UUID clientId = createTestClient();
+        UUID vehicleId1 = createTestVehicle();
+        UUID vehicleId2 = createTestVehicle();
+        
         CreateContractRequest request1 = new CreateContractRequest(
             clientId,
-            vehicleId,
+            vehicleId1,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
-        
-        // Create another vehicle for second contract
-        long timestamp2 = System.currentTimeMillis();
-        String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"brand\":\"Honda\",\"model\":\"Civic\",\"motorization\":\"Petrol\",\"color\":\"Red\",\"registrationPlate\":\"TEST2-" + timestamp2 + "\",\"purchaseDate\":\"2020-01-01\"}"))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-        UUID vehicleId2 = UUID.fromString(objectMapper.readTree(vehicle2Response).get("id").asText());
         
         CreateContractRequest request2 = new CreateContractRequest(
             clientId,
@@ -331,21 +381,14 @@ class ContractControllerIntegrationTest {
 
     @Test
     void searchContracts_WithStatusFilter() throws Exception {
-        // Given - create contracts with different statuses
-        // Create another vehicle for second contract
-        long timestamp3 = System.currentTimeMillis();
-        String vehicle2Response = mockMvc.perform(post("/api/v1/vehicles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"brand\":\"Honda\",\"model\":\"Accord\",\"motorization\":\"Hybrid\",\"color\":\"Silver\",\"registrationPlate\":\"TEST3-" + timestamp3 + "\",\"purchaseDate\":\"2020-01-01\"}"))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-        UUID vehicleId2 = UUID.fromString(objectMapper.readTree(vehicle2Response).get("id").asText());
+        // Given - create unique test data for contracts with different statuses
+        UUID clientId = createTestClient();
+        UUID vehicleId1 = createTestVehicle();
+        UUID vehicleId2 = createTestVehicle();
         
         CreateContractRequest request1 = new CreateContractRequest(
             clientId,
-            vehicleId,
+            vehicleId1,
             LocalDate.now().plusDays(1),
             LocalDate.now().plusDays(8)
         );
