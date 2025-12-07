@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.persistence.client;
+package com.bfb.infrastructure.client;
 
 import java.time.LocalDate;
 import java.util.UUID;

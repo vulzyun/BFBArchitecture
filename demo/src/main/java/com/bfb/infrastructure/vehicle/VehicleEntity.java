@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.persistence.vehicle;
+package com.bfb.infrastructure.vehicle;
 
 import com.bfb.business.vehicle.model.VehicleStatus;
 import jakarta.persistence.*;
