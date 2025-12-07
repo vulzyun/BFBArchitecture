@@ -15,6 +15,7 @@
 6. [Patterns de Persistance](#patterns-de-persistance)
 7. [Patterns d'Injection de Dépendances](#patterns-dinjection-de-dépendances)
 8. [Anti-Patterns Évités](#anti-patterns-évités)
+9. [Questions/Réponses de Soutenance](#questionsréponses-de-soutenance)
 
 ---
 
@@ -1146,6 +1147,1075 @@ Le projet BFB démontre une **maîtrise approfondie des design patterns** en con
 - ✅ **Tests complets** : 24/24 tests passent (TDD strict)
 
 **Ces patterns ne sont pas appliqués "pour le pattern", mais pour résoudre des problèmes concrets de maintenabilité, testabilité et extensibilité.**
+
+---
+
+## 💬 9. Questions/Réponses de Soutenance
+
+### 📐 Architecture & Patterns Architecturaux
+
+#### Q1: Pourquoi avoir choisi une architecture 3-tiers plutôt qu'une architecture hexagonale ?
+
+**Réponse:**
+
+Nous avons démarré avec une architecture hexagonale (Ports & Adapters) mais avons migré vers 3-tiers pour plusieurs raisons pragmatiques :
+
+✅ **Contexte applicatif:**
+- Application monolithique Spring Boot (1 seul déploiement)
+- Pas de multiples canaux d'entrée (pas de CLI, MQ, gRPC)
+- Pas de contraintes de DDD strict avec bounded contexts externes
+
+✅ **Avantages obtenus:**
+- Code plus simple et direct
+- Moins de couches d'abstraction (pas de ports/adapters superflus)
+- Communication directe entre services métier (`ContractService` → `VehicleService`)
+- Maintenabilité améliorée pour l'équipe
+
+✅ **Principes préservés:**
+- Logique métier toujours isolée dans `business/`
+- Aucune dépendance framework dans le domaine
+- Testabilité maintenue (mocks des repositories)
+
+**Quand utiliser Hexagonal ?**
+- Multiples interfaces (REST + CLI + MQ)
+- Changements fréquents de technologie
+- Bounded contexts DDD stricts
+
+---
+
+#### Q2: Comment garantissez-vous l'isolation de la couche métier du framework Spring ?
+
+**Réponse:**
+
+**1. Modèles du domaine purs (POJOs):**
+```java
+// ✅ Aucune annotation Spring/JPA
+public class Contract {
+    private UUID id;
+    private ContractStatus status;
+    // Pas de @Entity, @Service, @Autowired
+}
+```
+
+**2. Interfaces de repositories dans `business/`:**
+```java
+// Interface métier (pas Spring Data)
+public interface ContractRepository {
+    Contract save(Contract contract);
+    Optional<Contract> findById(UUID id);
+}
+
+// Implémentation JPA isolée dans infrastructure/
+@Component
+public class ContractRepositoryImpl implements ContractRepository { ... }
+```
+
+**3. Tests unitaires sans contexte Spring:**
+```java
+@Test
+void shouldValidateOverlap() {
+    // Pas de @SpringBootTest
+    ContractRepository mockRepo = mock(ContractRepository.class);
+    OverlapValidator validator = new OverlapValidator(mockRepo);
+    // Test pur sans DB ni Spring
+}
+```
+
+**Avantages:**
+- Migration vers Quarkus/Micronaut possible
+- Tests ultra-rapides (pas de contexte Spring)
+- Logique métier réutilisable
+
+---
+
+### 🔄 Chain of Responsibility
+
+#### Q3: Pourquoi utiliser le pattern Chain of Responsibility pour les validations plutôt qu'une simple méthode avec des if/else ?
+
+**Réponse:**
+
+**❌ Approche naïve (if/else):**
+```java
+@Service
+public class ContractService {
+    public Contract create(...) {
+        // Tous les ifs dans une seule méthode
+        if (startDate.isAfter(endDate)) throw ...;
+        if (!clientExists(clientId)) throw ...;
+        if (!vehicleAvailable(vehicleId)) throw ...;
+        if (hasOverlap(vehicleId, dates)) throw ...;
+        // Logique difficile à étendre et tester
+    }
+}
+```
+
+**✅ Avec Chain of Responsibility:**
+```java
+@Component
+public class ContractValidationChain {
+    private final List<ContractValidator> validators;
+    
+    public ContractValidationChain(
+        DateValidator dateValidator,
+        ClientExistenceValidator clientValidator,
+        VehicleAvailabilityValidator vehicleValidator,
+        OverlapValidator overlapValidator
+    ) {
+        this.validators = List.of(
+            dateValidator,      // Ordre important
+            clientValidator,
+            vehicleValidator,
+            overlapValidator
+        );
+    }
+}
+```
+
+**Avantages:**
+
+1. **Single Responsibility Principle:**
+   - Chaque validateur = 1 règle métier
+   - `DateValidator` : validation des dates
+   - `OverlapValidator` : chevauchements
+
+2. **Open/Closed Principle:**
+   ```java
+   // Ajout d'une nouvelle validation SANS modifier le service
+   public class PaymentMethodValidator implements ContractValidator {
+       @Override
+       public void validate(ContractCreationContext context) {
+           // Nouvelle règle métier
+       }
+   }
+   
+   // Injection automatique via Spring
+   public ContractValidationChain(..., PaymentMethodValidator paymentValidator) {
+       this.validators = List.of(..., paymentValidator);
+   }
+   ```
+
+3. **Testabilité:**
+   ```java
+   // Test unitaire isolé
+   @Test
+   void shouldRejectOverlappingContracts() {
+       OverlapValidator validator = new OverlapValidator(mockRepo);
+       // Test uniquement la règle de chevauchement
+   }
+   ```
+
+4. **Ordre d'exécution contrôlé:**
+   - Vérifier dates AVANT d'interroger la BD
+   - Vérifier existence client AVANT disponibilité véhicule
+
+---
+
+#### Q4: Pourquoi ne pas utiliser le pattern Decorator au lieu de Chain of Responsibility ?
+
+**Réponse:**
+
+**Chain of Responsibility vs Decorator:**
+
+| Critère | Chain of Responsibility | Decorator |
+|---------|------------------------|-----------|
+| **But** | Traiter séquentiellement des validations | Enrichir un objet avec des comportements |
+| **Arrêt** | S'arrête à la première erreur | Tous les decorators s'exécutent |
+| **Usage** | Validation, logging, filtrage | Ajout de fonctionnalités (cache, log, retry) |
+
+**Notre cas (validation):**
+- Chaque validateur peut lancer une exception et stopper la chaîne
+- Pas besoin d'enrichir un objet
+- Ordre strict : dates → client → véhicule → chevauchement
+
+**Decorator serait adapté pour:**
+```java
+// Ajouter des comportements à un service
+Service service = new BasicService();
+service = new CachedService(service);
+service = new LoggedService(service);
+service = new RetryService(service);
+```
+
+---
+
+### 🎯 State Pattern
+
+#### Q5: Pourquoi utiliser le State Pattern pour gérer les statuts de contrat ?
+
+**Réponse:**
+
+**❌ Sans State Pattern (logique dispersée):**
+```java
+public class ContractService {
+    public void startContract(UUID id) {
+        Contract contract = findById(id);
+        
+        // Validation manuelle des transitions
+        if (contract.getStatus() == ContractStatus.COMPLETED) {
+            throw new Exception("Cannot start completed contract");
+        }
+        if (contract.getStatus() == ContractStatus.CANCELLED) {
+            throw new Exception("Cannot start cancelled contract");
+        }
+        
+        contract.setStatus(ContractStatus.IN_PROGRESS);
+        // Risque d'oublier des transitions interdites
+    }
+}
+```
+
+**✅ Avec State Pattern:**
+```java
+public enum ContractStatus {
+    PENDING {
+        @Override
+        public Set<ContractStatus> getAllowedTransitions() {
+            return EnumSet.of(IN_PROGRESS, CANCELLED);
+        }
+    },
+    // Chaque état définit ses transitions autorisées
+}
+
+// Usage sécurisé
+public void start() {
+    this.status = this.status.transitionTo(IN_PROGRESS);
+    // Exception automatique si transition invalide
+}
+```
+
+**Avantages:**
+
+1. **Sécurité:** Impossible de faire une transition invalide
+2. **Centralisation:** Toute la logique d'état dans l'enum
+3. **Documentation:** Les transitions sont explicites
+4. **Tests exhaustifs:**
+   ```java
+   @Test
+   void shouldRejectTransitionFromCompletedToCancelled() {
+       Contract contract = new Contract(..., COMPLETED);
+       assertThrows(TransitionNotAllowedException.class, 
+           () -> contract.cancel());
+   }
+   ```
+
+---
+
+#### Q6: Pourquoi un enum et pas des classes séparées pour chaque état ?
+
+**Réponse:**
+
+**Pattern State classique (GoF):**
+```java
+interface ContractState {
+    ContractState start();
+    ContractState cancel();
+}
+
+class PendingState implements ContractState { ... }
+class InProgressState implements ContractState { ... }
+// 5 classes séparées
+```
+
+**Notre choix (enum):**
+```java
+public enum ContractStatus {
+    PENDING, IN_PROGRESS, LATE, COMPLETED, CANCELLED
+}
+```
+
+**Justification:**
+
+✅ **Simplicité:**
+- Pas de hiérarchie de classes complexe
+- Toutes les transitions visibles en un coup d'œil
+- Moins de fichiers à maintenir
+
+✅ **États simples:**
+- Pas de logique métier complexe par état
+- Juste des transitions autorisées
+- Pas besoin de polymorphisme avancé
+
+✅ **Type-safe:**
+- Enum natif Java (exhaustivité des switch)
+- Impossible d'instancier un état invalide
+
+**Quand utiliser des classes ?**
+- Chaque état a une logique métier complexe
+- Comportements très différents par état
+- Besoin de sous-états
+
+---
+
+### 🏛️ Repository Pattern
+
+#### Q7: Pourquoi créer une interface Repository dans business/ alors que Spring Data JPA existe déjà ?
+
+**Réponse:**
+
+**Architecture sans Repository Pattern:**
+```java
+// Service dépend directement de JPA
+@Service
+public class ClientService {
+    private final ClientJpaRepository jpaRepository; // Couplage JPA
+    
+    public Client create(...) {
+        ClientEntity entity = new ClientEntity(); // Dépendance @Entity
+        ClientEntity saved = jpaRepository.save(entity);
+        return convertToClient(saved);
+    }
+}
+```
+
+**Problèmes:**
+- ❌ Logique métier couplée à JPA
+- ❌ Impossible de tester sans base de données
+- ❌ Migration vers autre ORM difficile
+
+**Avec Repository Pattern:**
+```java
+// Interface métier (business/)
+public interface ClientRepository {
+    Client save(Client client);  // ← Modèle domaine, pas Entity
+    Optional<Client> findById(UUID id);
+}
+
+// Service dépend de l'interface
+@Service
+public class ClientService {
+    private final ClientRepository clientRepository; // ← Abstraction
+    
+    public Client create(...) {
+        Client client = new Client(...); // ← POJO pur
+        return clientRepository.save(client);
+    }
+}
+
+// Implémentation JPA (infrastructure/)
+@Component
+public class ClientRepositoryImpl implements ClientRepository {
+    private final ClientJpaRepository jpaRepository;
+    
+    @Override
+    public Client save(Client client) {
+        ClientEntity entity = toEntity(client);
+        ClientEntity saved = jpaRepository.save(entity);
+        return toDomain(saved); // Conversion ici
+    }
+}
+```
+
+**Avantages:**
+
+1. **Testabilité:**
+   ```java
+   @Test
+   void shouldCreateClient() {
+       ClientRepository mockRepo = mock(ClientRepository.class);
+       ClientService service = new ClientService(mockRepo);
+       // Test sans DB, sans Spring
+   }
+   ```
+
+2. **Dependency Inversion (SOLID):**
+   - Service dépend d'une abstraction
+   - Pas de dépendance à l'implémentation JPA
+
+3. **Flexibilité:**
+   - Changement MongoDB → PostgreSQL transparent
+   - Ajout d'un cache sans modifier le service
+
+4. **Domain-Driven Design:**
+   - Repository parle le langage métier
+   - `findByLicenseNumber()` vs `findByLicenseNumberEquals()`
+
+---
+
+#### Q8: Pourquoi convertir entre Domain Model, Entity et DTO ? N'est-ce pas du code dupliqué ?
+
+**Réponse:**
+
+**3 représentations différentes pour 3 objectifs différents:**
+
+```
+1. DTO (interfaces/rest/dto/)
+   ↓ Validation API, exposition contrôlée
+   
+2. Domain Model (business/model/)
+   ↓ Logique métier pure
+   
+3. Entity (infrastructure/persistence/)
+   ↓ Mapping base de données
+```
+
+**Exemple concret:**
+
+```java
+// 1. DTO - Exposition API
+public record ClientDto(
+    UUID id,
+    String fullName,        // ← Concaténation prénom + nom
+    String license,
+    int age                 // ← Calculé à partir de birthDate
+) {}
+
+// 2. Domain Model - Métier
+public class Client {
+    private String firstName;    // ← Séparés
+    private String lastName;
+    private LocalDate birthDate; // ← Date brute
+    private String licenseNumber;
+    
+    // Logique métier
+    public boolean isAdult() {
+        return Period.between(birthDate, LocalDate.now()).getYears() >= 18;
+    }
+}
+
+// 3. Entity - Persistance
+@Entity
+@Table(name = "clients")
+public class ClientEntity {
+    @Id
+    private UUID id;
+    
+    @Column(name = "first_name", length = 50)
+    private String firstName;
+    
+    @Column(name = "license_number", unique = true)
+    private String licenseNumber;
+    
+    // Annotations JPA/Hibernate
+}
+```
+
+**Avantages:**
+
+1. **Évolution indépendante:**
+   - Changer l'API sans toucher la BD
+   - Refactorer le domaine sans casser l'API
+   - Migration BD sans impact métier
+
+2. **Sécurité:**
+   ```java
+   // DTO expose seulement ce qui doit être public
+   public record ClientDto(
+       UUID id,
+       String fullName  // Pas de password, pas de données sensibles
+   ) {}
+   ```
+
+3. **Validation par couche:**
+   - DTO : `@NotNull`, `@Size`, `@Pattern`
+   - Domain : Règles métier (unicité permis)
+   - Entity : Contraintes BD (`@Column`, `@UniqueConstraint`)
+
+**Coût:**
+- ⚠️ Code de mapping (réduit avec MapStruct)
+- ✅ Flexibilité et découplage en retour
+
+---
+
+### 📦 Value Object
+
+#### Q9: Quelle est la différence entre une classe normale et un Value Object ?
+
+**Réponse:**
+
+**Classe normale (Entity):**
+```java
+public class Client {
+    private UUID id; // ← Identité
+    private String firstName;
+    
+    // Deux clients avec même nom mais ID différent ≠ égaux
+    @Override
+    public boolean equals(Object o) {
+        return this.id.equals(((Client) o).id);
+    }
+}
+```
+
+**Value Object:**
+```java
+public record Period(LocalDate startDate, LocalDate endDate) {
+    // Pas d'ID, égalité basée sur les valeurs
+    // Period(2025-12-01, 2025-12-10) == Period(2025-12-01, 2025-12-10)
+    
+    public boolean overlapsWith(Period other) {
+        return !this.endDate.isBefore(other.startDate) 
+            && !other.endDate.isBefore(this.startDate);
+    }
+}
+```
+
+**Caractéristiques Value Object:**
+
+1. **Pas d'identité:** Égalité par valeur
+2. **Immutable:** Pas de setters
+3. **Logique métier encapsulée:**
+   ```java
+   // ❌ Logique éparpillée
+   if (contract.getEndDate().isBefore(otherContract.getStartDate())) { ... }
+   
+   // ✅ Logique dans le Value Object
+   if (contract.getPeriod().overlapsWith(otherContract.getPeriod())) { ... }
+   ```
+
+4. **Validation à la construction:**
+   ```java
+   public Period {
+       if (!startDate.isBefore(endDate)) {
+           throw new IllegalArgumentException("Invalid period");
+       }
+   }
+   
+   // Impossible d'avoir un Period invalide
+   ```
+
+**Exemples courants:**
+- `Money` : amount + currency
+- `Address` : street + city + zipCode
+- `Email` : avec validation format
+- `Period` : startDate + endDate
+
+---
+
+### ✅ Validation
+
+#### Q10: Pourquoi deux niveaux de validation (Bean Validation + Validation métier) ?
+
+**Réponse:**
+
+**Deux types de règles différentes:**
+
+**1. Bean Validation (JSR 380) - Couche API:**
+```java
+public record CreateClientRequest(
+    @NotNull(message = "First name required")
+    @Size(min = 2, max = 50)
+    String firstName,
+    
+    @Pattern(regexp = "^[A-Z0-9]{8,12}$")
+    String licenseNumber
+) {}
+```
+
+**Rôle:**
+- ✅ Validation **syntaxique** (format, longueur, pattern)
+- ✅ Vérification **avant** d'appeler le service
+- ✅ Évite les appels inutiles avec données invalides
+
+**2. Validation métier - Couche Service:**
+```java
+@Service
+public class ClientService {
+    public Client create(...) {
+        // Validation métier (nécessite la BD)
+        if (clientRepository.existsByLicenseNumber(licenseNumber)) {
+            throw new DuplicateLicenseException(...);
+        }
+    }
+}
+```
+
+**Rôle:**
+- ✅ Validation **sémantique** (unicité, cohérence métier)
+- ✅ Nécessite accès aux données existantes
+- ✅ Règles métier complexes
+
+**Séparation nécessaire:**
+
+| Bean Validation | Validation Métier |
+|----------------|-------------------|
+| Format email valide | Email déjà utilisé |
+| Date non nulle | Date dans le futur |
+| Longueur 2-50 caractères | Client mineur (<18 ans) |
+| Pattern regex | Permis suspendu |
+
+**Pourquoi ne pas tout mettre dans le service ?**
+- ❌ Appels service inutiles avec données mal formatées
+- ❌ Pas de feedback immédiat (avant sérialisation)
+- ❌ Couplage validation/logique métier
+
+---
+
+### 🔌 Injection de Dépendances
+
+#### Q11: Pourquoi l'injection par constructeur plutôt que @Autowired sur les champs ?
+
+**Réponse:**
+
+**❌ Injection par champ:**
+```java
+@Service
+public class ContractService {
+    @Autowired
+    private ContractRepository contractRepository;
+    
+    @Autowired
+    private ValidationChain validationChain;
+    
+    // Pas de constructeur visible
+}
+```
+
+**Problèmes:**
+1. **Pas immutable:** Champs modifiables après construction
+2. **Tests difficiles:** 
+   ```java
+   ContractService service = new ContractService();
+   // Comment injecter les mocks ? Reflection !
+   ```
+3. **Dépendances cachées:** Constructeur par défaut ne montre rien
+4. **Dépendances circulaires silencieuses**
+
+**✅ Injection par constructeur:**
+```java
+@Service
+public class ContractService {
+    private final ContractRepository contractRepository;
+    private final ValidationChain validationChain;
+
+    public ContractService(
+            ContractRepository contractRepository,
+            ValidationChain validationChain) {
+        this.contractRepository = contractRepository;
+        this.validationChain = validationChain;
+    }
+}
+```
+
+**Avantages:**
+
+1. **Immutabilité (thread-safe):**
+   ```java
+   private final ContractRepository repo; // ← final = immutable
+   ```
+
+2. **Tests simples:**
+   ```java
+   @Test
+   void shouldCreateContract() {
+       ContractRepository mockRepo = mock(ContractRepository.class);
+       ValidationChain mockChain = mock(ValidationChain.class);
+       
+       ContractService service = new ContractService(mockRepo, mockChain);
+       // Pas besoin de Spring pour les tests
+   }
+   ```
+
+3. **Dépendances explicites:**
+   - Constructeur montre toutes les dépendances
+   - Code autodocumenté
+
+4. **Détection erreurs au démarrage:**
+   ```java
+   // Dépendance circulaire détectée immédiatement
+   // A → B → C → A
+   // Exception au démarrage de Spring
+   ```
+
+**Best Practice Spring officielle:** Constructor Injection
+
+---
+
+### 🚫 Anti-Patterns
+
+#### Q12: Pourquoi votre domaine est "anémique" alors que c'est souvent considéré comme un anti-pattern ?
+
+**Réponse:**
+
+**Anemic Domain Model - Anti-pattern DDD:**
+
+Un modèle "anémique" a des objets sans logique, juste des getters/setters:
+
+```java
+// ❌ Modèle complètement anémique
+public class Contract {
+    private UUID id;
+    private ContractStatus status;
+    
+    // Juste getters/setters, pas de logique
+    public UUID getId() { return id; }
+    public void setStatus(ContractStatus status) { this.status = status; }
+}
+
+// ❌ Toute la logique dans le service
+@Service
+public class ContractService {
+    public void startContract(UUID id) {
+        Contract contract = find(id);
+        if (contract.getStatus() == PENDING) {
+            contract.setStatus(IN_PROGRESS);
+        }
+    }
+}
+```
+
+**Notre approche - Anemic partiel mais assumé:**
+
+```java
+// ✅ Modèle avec logique d'état
+public class Contract {
+    private ContractStatus status;
+    
+    // Logique métier critique encapsulée
+    public void start() {
+        this.status = this.status.transitionTo(IN_PROGRESS);
+    }
+    
+    public void cancel() {
+        this.status = this.status.transitionTo(CANCELLED);
+    }
+}
+
+// ✅ Service orchestrateur (plus léger)
+@Service
+public class ContractService {
+    public Contract start(UUID id) {
+        Contract contract = findById(id);
+        contract.start(); // ← Délégation au modèle
+        return contractRepository.save(contract);
+    }
+}
+```
+
+**Justification:**
+
+1. **Architecture 3-tiers pragmatique:**
+   - Services coordonnent les opérations
+   - Modèles gèrent leur état interne
+   - Équilibre entre DDD pur et pragmatisme
+
+2. **Logique métier critique dans le modèle:**
+   - Transitions d'état → `Contract.start()`
+   - Validation période → `Period.overlapsWith()`
+   - Calculs métier → `Period.durationInDays()`
+
+3. **Logique de coordination dans les services:**
+   - Validation multi-entités (client + véhicule + contrat)
+   - Orchestration transactions
+   - Appels inter-services
+
+**Quand utiliser Rich Domain Model ?**
+- DDD strict avec bounded contexts
+- Logique métier très complexe par entité
+- Event Sourcing / CQRS
+
+**Notre contexte:**
+- Application CRUD avec règles métier modérées
+- TDD avec tests unitaires rapides
+- Équilibre maintenabilité/complexité
+
+---
+
+#### Q13: Vous n'utilisez pas CQRS, pourquoi ?
+
+**Réponse:**
+
+**CQRS (Command Query Responsibility Segregation):**
+
+Séparer les modèles de lecture et d'écriture:
+
+```java
+// Modèle Command (écriture)
+public class CreateContractCommand {
+    private UUID clientId;
+    private UUID vehicleId;
+    // ...
+}
+
+// Modèle Query (lecture)
+public class ContractView {
+    private UUID id;
+    private String clientName;  // Dénormalisé
+    private String vehiclePlate;
+    // Optimisé pour la lecture
+}
+
+// Deux bases de données distinctes
+```
+
+**Pourquoi nous ne l'utilisons pas:**
+
+❌ **Complexité non justifiée:**
+- Application à charge modérée
+- Pas de différence lecture/écriture extrême
+- Pas besoin de scalabilité séparée
+
+❌ **Overhead développement:**
+- Double modélisation (command + query)
+- Synchronisation entre les modèles
+- Équipe de 4 développeurs
+
+✅ **Notre contexte:**
+- Ratio lecture/écriture équilibré
+- Requêtes simples (pas d'agrégations complexes)
+- Base unique PostgreSQL suffit
+
+**Quand utiliser CQRS ?**
+- 1000+ lectures pour 1 écriture
+- Requêtes analytiques complexes
+- Besoin de scalabilité indépendante
+- Event Sourcing
+
+**Alternative choisie:**
+- Repository Pattern simple
+- Pagination avec Spring Data
+- Cache niveau service si besoin
+
+---
+
+### 🎯 Questions Transversales
+
+#### Q14: Comment ces patterns facilitent-ils les tests ?
+
+**Réponse:**
+
+**1. Tests unitaires sans Spring (rapides):**
+
+```java
+// Test d'un validateur isolé
+@Test
+void shouldRejectOverlappingContracts() {
+    // Arrange
+    ContractRepository mockRepo = mock(ContractRepository.class);
+    when(mockRepo.findOverlappingContracts(...))
+        .thenReturn(List.of(existingContract));
+    
+    OverlapValidator validator = new OverlapValidator(mockRepo);
+    
+    // Act & Assert
+    assertThrows(OverlapException.class, 
+        () -> validator.validate(context));
+}
+// ✅ Pas de @SpringBootTest, pas de BD, exécution <10ms
+```
+
+**2. Mock des interfaces (Dependency Inversion):**
+
+```java
+@Test
+void shouldCreateContract() {
+    // Mock des dépendances
+    ContractRepository mockRepo = mock(ContractRepository.class);
+    ValidationChain mockChain = mock(ValidationChain.class);
+    
+    // Service avec dépendances mockées
+    ContractService service = new ContractService(mockRepo, mockChain);
+    
+    // Test du comportement
+    Contract result = service.create(clientId, vehicleId, start, end);
+    
+    verify(mockChain).validateAll(any());
+    verify(mockRepo).save(any());
+}
+```
+
+**3. Tests de composants indépendants (SRP):**
+
+Chaque pattern = composant testable isolément:
+
+- ✅ Test `DateValidator` sans les autres validateurs
+- ✅ Test `ContractStatus` transitions sans service
+- ✅ Test `Period.overlapsWith()` sans base de données
+
+**4. Tests d'intégration ciblés:**
+
+```java
+@SpringBootTest
+@AutoConfigureTestDatabase
+class ContractControllerIntegrationTest {
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @Test
+    void shouldCreateContractEndToEnd() {
+        // Test complet avec base H2
+        mockMvc.perform(post("/api/contracts")
+            .content(jsonRequest))
+            .andExpect(status().isCreated());
+    }
+}
+```
+
+**Pyramide de tests respectée:**
+```
+        /\
+       /  \  E2E (Integration)
+      /────\
+     /      \ Tests Services (Mocks)
+    /────────\
+   /          \ Tests Unitaires (Rapides)
+  /────────────\
+```
+
+**Résultat:** 24/24 tests passent en <5 secondes
+
+---
+
+#### Q15: Si vous deviez ajouter une nouvelle règle métier demain, comment feriez-vous ?
+
+**Réponse:**
+
+**Scénario:** *"Un client ne peut pas louer plus de 3 véhicules simultanément"*
+
+**Étapes (TDD):**
+
+**1. RED - Écrire le test:**
+```java
+@Test
+void shouldRejectContractWhenClientHas3ActiveRentals() {
+    // Arrange
+    UUID clientId = UUID.randomUUID();
+    when(contractRepository.countActiveContractsByClient(clientId))
+        .thenReturn(3);
+    
+    MaxRentalsValidator validator = new MaxRentalsValidator(contractRepository);
+    ContractCreationContext context = new ContractCreationContext(
+        clientId, vehicleId, startDate, endDate
+    );
+    
+    // Act & Assert
+    assertThrows(MaxRentalsExceededException.class,
+        () -> validator.validate(context));
+}
+```
+
+**2. GREEN - Implémenter le validateur:**
+```java
+@Component
+public class MaxRentalsValidator implements ContractValidator {
+    private static final int MAX_ACTIVE_RENTALS = 3;
+    private final ContractRepository contractRepository;
+
+    @Override
+    public void validate(ContractCreationContext context) {
+        long activeRentals = contractRepository
+            .countActiveContractsByClient(context.clientId());
+        
+        if (activeRentals >= MAX_ACTIVE_RENTALS) {
+            throw new MaxRentalsExceededException(
+                String.format("Client %s already has %d active rentals. Maximum is %d.",
+                    context.clientId(), activeRentals, MAX_ACTIVE_RENTALS)
+            );
+        }
+    }
+}
+```
+
+**3. REFACTOR - Ajouter à la chaîne:**
+```java
+@Component
+public class ContractValidationChain {
+    private final List<ContractValidator> validators;
+
+    public ContractValidationChain(
+            DateValidator dateValidator,
+            ClientExistenceValidator clientValidator,
+            VehicleAvailabilityValidator vehicleValidator,
+            OverlapValidator overlapValidator,
+            MaxRentalsValidator maxRentalsValidator) { // ← Nouvelle dépendance
+        this.validators = List.of(
+            dateValidator,
+            clientValidator,
+            vehicleValidator,
+            overlapValidator,
+            maxRentalsValidator // ← Ajout dans la chaîne
+        );
+    }
+}
+```
+
+**4. Ajouter la méthode repository:**
+```java
+public interface ContractRepository {
+    // ... méthodes existantes
+    
+    long countActiveContractsByClient(UUID clientId); // ← Nouvelle signature
+}
+
+@Component
+public class ContractRepositoryImpl implements ContractRepository {
+    @Override
+    public long countActiveContractsByClient(UUID clientId) {
+        return jpaRepository.countByClientIdAndStatusIn(
+            clientId, 
+            List.of(ContractStatus.PENDING, ContractStatus.IN_PROGRESS)
+        );
+    }
+}
+```
+
+**Modifications nécessaires:**
+- ✅ 1 nouvelle classe (`MaxRentalsValidator`)
+- ✅ 1 test unitaire
+- ✅ 1 ligne dans `ContractValidationChain`
+- ✅ 1 méthode dans `ContractRepository`
+
+**Pas de modification:**
+- ✅ `ContractService` inchangé
+- ✅ `ContractController` inchangé
+- ✅ Autres validateurs inchangés
+
+**Avantages Chain of Responsibility:**
+- Open/Closed Principle respecté
+- Ajout sans casser l'existant
+- Tests isolés
+
+---
+
+#### Q16: Quels sont les compromis (trade-offs) de votre architecture ?
+
+**Réponse:**
+
+**Avantages:**
+
+✅ **Maintenabilité:**
+- Code organisé et prévisible
+- Chaque couche a un rôle clair
+- Facile pour nouveaux développeurs
+
+✅ **Testabilité:**
+- 24/24 tests passent
+- Tests unitaires rapides (<5s)
+- Couverture >80%
+
+✅ **Extensibilité:**
+- Ajout validateurs sans modification service
+- Nouveaux endpoints sans toucher métier
+
+**Inconvénients assumés:**
+
+⚠️ **Verbosité:**
+- 3 représentations (DTO/Domain/Entity)
+- Code de mapping (réduit avec MapStruct)
+- Plus de fichiers qu'un monolithe "simple"
+
+⚠️ **Over-engineering potentiel:**
+- Patterns parfois "lourds" pour CRUD simple
+- Chain of Responsibility pour 4 validations
+- Justifié par l'apprentissage et l'évolutivité
+
+⚠️ **Performance:**
+- Conversions DTO↔Domain↔Entity (coût négligeable)
+- Pas de cache (volontairement simplifié)
+- Acceptable pour notre charge
+
+**Quand cette architecture est justifiée:**
+- ✅ Application évolutive (nouvelles règles métier)
+- ✅ Équipe >3 développeurs
+- ✅ Tests automatisés obligatoires
+- ✅ Maintenabilité long terme
+
+**Quand elle est excessive:**
+- ❌ Prototype jetable
+- ❌ Application ultra-simple (5 endpoints CRUD)
+- ❌ Équipe 1 personne court terme
+
+**Notre conclusion:**
+Balance pragmatique entre patterns académiques et réalité projet étudiant.
 
 ---
 
