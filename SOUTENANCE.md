@@ -95,116 +95,106 @@ Développement d'un système de gestion de locations automobiles pour BFB permet
 
 ### Diagramme de Classes Simplifié
 
-```plantuml
-@startuml
-skinparam classAttributeIconSize 0
-skinparam backgroundColor #FEFEFE
-skinparam class {
-    BackgroundColor<<Entity>> LightBlue
-    BackgroundColor<<ValueObject>> LightGreen
-    BackgroundColor<<Enum>> Wheat
-}
+```mermaid
+classDiagram
+    class Contract {
+        -UUID id
+        -UUID clientId
+        -UUID vehicleId
+        -LocalDate startDate
+        -LocalDate endDate
+        -ContractStatus status
+        +start() void
+        +terminate() void
+        +cancel() void
+        +markLate() void
+    }
 
-class Contract <<Entity>> {
-  - id: UUID
-  - clientId: UUID
-  - vehicleId: UUID
-  - startDate: LocalDate
-  - endDate: LocalDate
-  - status: ContractStatus
-  --
-  + start(): void
-  + terminate(): void
-  + cancel(): void
-  + markLate(): void
-}
+    class Client {
+        -UUID id
+        -String firstName
+        -String lastName
+        -LocalDate birthDate
+        -String licenseNumber
+        -String address
+    }
 
-class Client <<Entity>> {
-  - id: UUID
-  - firstName: String
-  - lastName: String
-  - birthDate: LocalDate
-  - licenseNumber: String
-  - address: String
-}
+    class Vehicle {
+        -UUID id
+        -String brand
+        -String model
+        -String motorization
+        -String color
+        -String registrationPlate
+        -LocalDate purchaseDate
+        -VehicleStatus status
+    }
 
-class Vehicle <<Entity>> {
-  - id: UUID
-  - brand: String
-  - model: String
-  - motorization: String
-  - color: String
-  - registrationPlate: String
-  - purchaseDate: LocalDate
-  - status: VehicleStatus
-}
+    class ContractStatus {
+        <<enumeration>>
+        PENDING
+        IN_PROGRESS
+        LATE
+        COMPLETED
+        CANCELLED
+        +getAllowedTransitions() Set
+        +transitionTo(status) void
+    }
 
-enum ContractStatus <<Enum>> {
-  PENDING
-  IN_PROGRESS
-  LATE
-  COMPLETED
-  CANCELLED
-  --
-  + getAllowedTransitions(): Set
-  + transitionTo(status): void
-}
+    class VehicleStatus {
+        <<enumeration>>
+        AVAILABLE
+        RENTED
+        BROKEN
+        MAINTENANCE
+    }
 
-enum VehicleStatus <<Enum>> {
-  AVAILABLE
-  RENTED
-  BROKEN
-  MAINTENANCE
-}
+    class Period {
+        <<ValueObject>>
+        -LocalDate start
+        -LocalDate end
+        +overlapsWith(other) boolean
+        +isValid() boolean
+    }
 
-class Period <<ValueObject>> {
-  - start: LocalDate
-  - end: LocalDate
-  --
-  + overlapsWith(other): boolean
-  + isValid(): boolean
-}
+    class ContractValidator {
+        <<interface>>
+        +validate(context) void
+    }
 
-interface ContractValidator {
-  + validate(context): void
-}
+    class DateValidator {
+        +validate(context) void
+    }
 
-class DateValidator {
-  + validate(context): void
-}
+    class ClientExistenceValidator {
+        +validate(context) void
+    }
 
-class ClientExistenceValidator {
-  + validate(context): void
-}
+    class VehicleAvailabilityValidator {
+        +validate(context) void
+    }
 
-class VehicleAvailabilityValidator {
-  + validate(context): void
-}
+    class OverlapValidator {
+        +validate(context) void
+    }
 
-class OverlapValidator {
-  + validate(context): void
-}
+    class ContractValidationChain {
+        -List~ContractValidator~ validators
+        +validateAll(context) void
+    }
 
-class ContractValidationChain {
-  - validators: List<ContractValidator>
-  --
-  + validateAll(context): void
-}
+    Contract "1" --> "1" ContractStatus : status
+    Contract "1" --> "1" Period : period
+    Contract "*" --> "1" Client : client
+    Contract "*" --> "1" Vehicle : vehicle
+    Vehicle "1" --> "1" VehicleStatus : status
 
-Contract "1" --> "1" ContractStatus : status
-Contract "1" --> "1" Period : period
-Contract "*" --> "1" Client : client
-Contract "*" --> "1" Vehicle : vehicle
-Vehicle "1" --> "1" VehicleStatus : status
+    ContractValidator <|.. DateValidator : implements
+    ContractValidator <|.. ClientExistenceValidator : implements
+    ContractValidator <|.. VehicleAvailabilityValidator : implements
+    ContractValidator <|.. OverlapValidator : implements
 
-ContractValidator <|.. DateValidator
-ContractValidator <|.. ClientExistenceValidator
-ContractValidator <|.. VehicleAvailabilityValidator
-ContractValidator <|.. OverlapValidator
-
-ContractValidationChain o--> "*" ContractValidator : uses
-
-@enduml
+    ContractValidationChain o-- "*" ContractValidator : uses
 ```
 
 ### Points Clés du Modèle
@@ -219,164 +209,110 @@ ContractValidationChain o--> "*" ContractValidator : uses
 
 ### Scénario 1 : Création d'un Contrat (Succès)
 
-```plantuml
-@startuml
-actor Client as "Client REST"
-participant Controller as "ContractController"
-participant Service as "ContractService"
-participant Chain as "ValidationChain"
-participant DateVal as "DateValidator"
-participant ClientVal as "ClientExistenceValidator"
-participant VehicleVal as "VehicleAvailabilityValidator"
-participant OverlapVal as "OverlapValidator"
-participant Repo as "ContractRepository"
-database DB as "H2 Database"
+```mermaid
+sequenceDiagram
+    actor Client as Client REST
+    participant Controller as ContractController
+    participant Service as ContractService
+    participant Chain as ValidationChain
+    participant DateVal as DateValidator
+    participant ClientVal as ClientExistenceValidator
+    participant VehicleVal as VehicleAvailabilityValidator
+    participant OverlapVal as OverlapValidator
+    participant Repo as ContractRepository
+    participant DB as H2 Database
 
-Client -> Controller: POST /api/contracts\n{clientId, vehicleId, startDate, endDate}
-activate Controller
-
-Controller -> Service: create(clientId, vehicleId, startDate, endDate)
-activate Service
-
-Service -> Chain: validateAll(context)
-activate Chain
-
-Chain -> DateVal: validate(context)
-activate DateVal
-DateVal --> Chain: ✓ Dates valides
-deactivate DateVal
-
-Chain -> ClientVal: validate(context)
-activate ClientVal
-ClientVal --> Chain: ✓ Client existe
-deactivate ClientVal
-
-Chain -> VehicleVal: validate(context)
-activate VehicleVal
-VehicleVal --> Chain: ✓ Véhicule disponible
-deactivate VehicleVal
-
-Chain -> OverlapVal: validate(context)
-activate OverlapVal
-OverlapVal -> Repo: findOverlappingContracts(vehicleId, dates)
-Repo -> DB: SELECT ...
-DB --> Repo: []
-OverlapVal --> Chain: ✓ Pas de chevauchement
-deactivate OverlapVal
-
-Chain --> Service: Validation OK
-deactivate Chain
-
-Service -> Repo: save(contract)
-activate Repo
-Repo -> DB: INSERT INTO contracts...
-DB --> Repo: contract saved
-Repo --> Service: Contract (status=PENDING)
-deactivate Repo
-
-Service --> Controller: Contract créé
-deactivate Service
-
-Controller --> Client: 201 CREATED\n{id, clientId, vehicleId, status: "PENDING"}
-deactivate Controller
-
-@enduml
+    Client->>+Controller: POST /api/contracts<br/>{clientId, vehicleId, startDate, endDate}
+    Controller->>+Service: create(clientId, vehicleId, startDate, endDate)
+    Service->>+Chain: validateAll(context)
+    
+    Chain->>+DateVal: validate(context)
+    DateVal-->>-Chain: ✓ Dates valides
+    
+    Chain->>+ClientVal: validate(context)
+    ClientVal-->>-Chain: ✓ Client existe
+    
+    Chain->>+VehicleVal: validate(context)
+    VehicleVal-->>-Chain: ✓ Véhicule disponible
+    
+    Chain->>+OverlapVal: validate(context)
+    OverlapVal->>+Repo: findOverlappingContracts(vehicleId, dates)
+    Repo->>+DB: SELECT ...
+    DB-->>-Repo: []
+    OverlapVal-->>-Chain: ✓ Pas de chevauchement
+    
+    Chain-->>-Service: Validation OK
+    
+    Service->>+Repo: save(contract)
+    Repo->>+DB: INSERT INTO contracts...
+    DB-->>-Repo: contract saved
+    Repo-->>-Service: Contract (status=PENDING)
+    
+    Service-->>-Controller: Contract créé
+    Controller-->>-Client: 201 CREATED<br/>{id, clientId, vehicleId, status: "PENDING"}
 ```
 
 ### Scénario 2 : Rejet pour Chevauchement
 
-```plantuml
-@startuml
-actor Client as "Client REST"
-participant Controller as "ContractController"
-participant Service as "ContractService"
-participant Chain as "ValidationChain"
-participant OverlapVal as "OverlapValidator"
-participant Repo as "ContractRepository"
+```mermaid
+sequenceDiagram
+    actor Client as Client REST
+    participant Controller as ContractController
+    participant Service as ContractService
+    participant Chain as ValidationChain
+    participant OverlapVal as OverlapValidator
+    participant Repo as ContractRepository
 
-Client -> Controller: POST /api/contracts\n{vehicleId: 123, dates: 10-15 Dec}
-activate Controller
-
-Controller -> Service: create(...)
-activate Service
-
-Service -> Chain: validateAll(context)
-activate Chain
-
-note right: Validateurs précédents OK
-
-Chain -> OverlapVal: validate(context)
-activate OverlapVal
-
-OverlapVal -> Repo: findOverlappingContracts(vehicleId, dates)
-activate Repo
-Repo --> OverlapVal: [Contract(id=456, dates=12-14 Dec)]
-deactivate Repo
-
-OverlapVal --> Chain: ❌ OverlapException\n"Vehicle already booked"
-deactivate OverlapVal
-
-Chain --> Service: OverlapException
-deactivate Chain
-
-Service --> Controller: OverlapException
-deactivate Service
-
-Controller --> Client: 409 CONFLICT\n{"error": "Vehicle already booked 12-14 Dec"}
-deactivate Controller
-
-@enduml
+    Client->>+Controller: POST /api/contracts<br/>{vehicleId: 123, dates: 10-15 Dec}
+    Controller->>+Service: create(...)
+    Service->>+Chain: validateAll(context)
+    
+    Note over Chain,OverlapVal: Validateurs précédents OK
+    
+    Chain->>+OverlapVal: validate(context)
+    OverlapVal->>+Repo: findOverlappingContracts(vehicleId, dates)
+    Repo-->>-OverlapVal: [Contract(id=456, dates=12-14 Dec)]
+    OverlapVal-->>-Chain: ❌ OverlapException<br/>"Vehicle already booked"
+    
+    Chain-->>-Service: OverlapException
+    Service-->>-Controller: OverlapException
+    Controller-->>-Client: 409 CONFLICT<br/>{"error": "Vehicle already booked 12-14 Dec"}
 ```
 
 ### Scénario 3 : Véhicule en Panne → Annulation Contrats
 
-```plantuml
-@startuml
-actor Admin as "Admin"
-participant VehicleController as "VehicleController"
-participant VehicleService as "VehicleService"
-participant EventListener as "VehicleEventsListener"
-participant ContractService as "ContractService"
-participant Repo as "ContractRepository"
-database DB as "H2 Database"
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant VehicleController
+    participant VehicleService
+    participant EventListener as VehicleEventsListener
+    participant ContractService
+    participant Repo as ContractRepository
+    participant DB as H2 Database
 
-Admin -> VehicleController: PATCH /api/vehicles/123\n{status: "BROKEN"}
-activate VehicleController
-
-VehicleController -> VehicleService: updateStatus(vehicleId, BROKEN)
-activate VehicleService
-VehicleService -> DB: UPDATE vehicles SET status='BROKEN'
-VehicleService --> VehicleController: Vehicle updated
-deactivate VehicleService
-
-VehicleController -> EventListener: POST /internal/events/vehicles/marked-down\n{vehicleId: 123}
-activate EventListener
-
-EventListener -> ContractService: cancelPendingContractsForVehicle(vehicleId)
-activate ContractService
-
-ContractService -> Repo: findByVehicleIdAndStatus(123, PENDING)
-activate Repo
-Repo -> DB: SELECT * FROM contracts WHERE vehicle_id=123 AND status='PENDING'
-DB --> Repo: [Contract1, Contract2, Contract3]
-deactivate Repo
-
-loop Pour chaque contrat PENDING
-    ContractService -> ContractService: contract.cancel()
-    ContractService -> Repo: save(contract)
-    Repo -> DB: UPDATE contracts SET status='CANCELLED'
-end
-
-ContractService --> EventListener: 3 contrats annulés
-deactivate ContractService
-
-EventListener --> VehicleController: {contractsCancelled: 3}
-deactivate EventListener
-
-VehicleController --> Admin: 200 OK\n"Vehicle marked broken, 3 contracts cancelled"
-deactivate VehicleController
-
-@enduml
+    Admin->>+VehicleController: PATCH /api/vehicles/123<br/>{status: "BROKEN"}
+    VehicleController->>+VehicleService: updateStatus(vehicleId, BROKEN)
+    VehicleService->>DB: UPDATE vehicles SET status='BROKEN'
+    VehicleService-->>-VehicleController: Vehicle updated
+    
+    VehicleController->>+EventListener: POST /internal/events/vehicles/marked-down<br/>{vehicleId: 123}
+    EventListener->>+ContractService: cancelPendingContractsForVehicle(vehicleId)
+    
+    ContractService->>+Repo: findByVehicleIdAndStatus(123, PENDING)
+    Repo->>+DB: SELECT * FROM contracts WHERE vehicle_id=123 AND status='PENDING'
+    DB-->>-Repo: [Contract1, Contract2, Contract3]
+    Repo-->>-ContractService: Liste de contrats
+    
+    loop Pour chaque contrat PENDING
+        ContractService->>ContractService: contract.cancel()
+        ContractService->>Repo: save(contract)
+        Repo->>DB: UPDATE contracts SET status='CANCELLED'
+    end
+    
+    ContractService-->>-EventListener: 3 contrats annulés
+    EventListener-->>-VehicleController: {contractsCancelled: 3}
+    VehicleController-->>-Admin: 200 OK<br/>"Vehicle marked broken, 3 contracts cancelled"
 ```
 
 ---
@@ -398,45 +334,32 @@ deactivate VehicleController
 
 ### Machine à États des Contrats
 
-```plantuml
-@startuml
-skinparam state {
-    BackgroundColor<<Terminal>> LightCoral
-    BackgroundColor<<Active>> LightGreen
-}
-
-[*] --> PENDING : Création
-
-PENDING --> IN_PROGRESS : start()
-PENDING --> CANCELLED : cancel()
-
-IN_PROGRESS --> COMPLETED : terminate()
-IN_PROGRESS --> LATE : Date dépassée (Job planifié)
-
-LATE --> COMPLETED : terminate()
-
-COMPLETED --> [*]
-CANCELLED --> [*]
-
-state PENDING
-state IN_PROGRESS <<Active>>
-state LATE <<Active>>
-state COMPLETED <<Terminal>>
-state CANCELLED <<Terminal>>
-
-note right of PENDING
-  État initial
-  Peut être annulé automatiquement
-  si véhicule en panne
-end note
-
-note right of LATE
-  Déclenché automatiquement
-  par ContractScheduledJobs
-  toutes les 5 minutes
-end note
-
-@enduml
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Création
+    
+    PENDING --> IN_PROGRESS : start()
+    PENDING --> CANCELLED : cancel()
+    
+    IN_PROGRESS --> COMPLETED : terminate()
+    IN_PROGRESS --> LATE : Date dépassée (Job planifié)
+    
+    LATE --> COMPLETED : terminate()
+    
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+    
+    note right of PENDING
+        État initial
+        Peut être annulé automatiquement
+        si véhicule en panne
+    end note
+    
+    note right of LATE
+        Déclenché automatiquement
+        par ContractScheduledJobs
+        toutes les 5 minutes
+    end note
 ```
 
 ### Code Source : Matrice de Transitions
@@ -552,42 +475,30 @@ void shouldCreateContractAndReturn201() throws Exception {
 
 ### 1. Chain of Responsibility (Validation)
 
-```plantuml
-@startuml
-participant Context as "ContractCreationContext"
-participant Chain as "ValidationChain"
-participant V1 as "DateValidator"
-participant V2 as "ClientExistenceValidator"
-participant V3 as "VehicleAvailabilityValidator"
-participant V4 as "OverlapValidator"
+```mermaid
+sequenceDiagram
+    participant Context as ContractCreationContext
+    participant Chain as ValidationChain
+    participant V1 as DateValidator
+    participant V2 as ClientExistenceValidator
+    participant V3 as VehicleAvailabilityValidator
+    participant V4 as OverlapValidator
 
-Context -> Chain: validateAll(context)
-activate Chain
-
-Chain -> V1: validate(context)
-activate V1
-V1 --> Chain: ✓
-deactivate V1
-
-Chain -> V2: validate(context)
-activate V2
-V2 --> Chain: ✓
-deactivate V2
-
-Chain -> V3: validate(context)
-activate V3
-V3 --> Chain: ✓
-deactivate V3
-
-Chain -> V4: validate(context)
-activate V4
-V4 --> Chain: ✓ ou ❌ Exception
-deactivate V4
-
-Chain --> Context: Résultat final
-deactivate Chain
-
-@enduml
+    Context->>+Chain: validateAll(context)
+    
+    Chain->>+V1: validate(context)
+    V1-->>-Chain: ✓
+    
+    Chain->>+V2: validate(context)
+    V2-->>-Chain: ✓
+    
+    Chain->>+V3: validate(context)
+    V3-->>-Chain: ✓
+    
+    Chain->>+V4: validate(context)
+    V4-->>-Chain: ✓ ou ❌ Exception
+    
+    Chain-->>-Context: Résultat final
 ```
 
 **Avantages** :
