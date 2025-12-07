@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.persistence.contract;
+package com.bfb.infrastructure.contract;
 
 import com.bfb.business.contract.model.ContractStatus;
 import org.springframework.data.domain.Page;

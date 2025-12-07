@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.persistence.client;
+package com.bfb.infrastructure.client;
 
 import java.util.List;
 import java.util.Optional;
