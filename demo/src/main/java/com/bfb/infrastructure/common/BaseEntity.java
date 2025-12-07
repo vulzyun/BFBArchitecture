@@ -1,4 +1,4 @@
-package com.bfb.infrastructure.persistence.common;
+package com.bfb.infrastructure.common;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
