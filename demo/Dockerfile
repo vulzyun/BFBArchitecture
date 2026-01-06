@@ -1,23 +1,20 @@
-FROM eclipse-temurin:17-jdk-jammy AS build
-ENV HOME=/usr/app
-RUN mkdir -p $HOME
-WORKDIR $HOME
-ADD . $HOME
-RUN --mount=type=cache,target=/root/.m2 ./mvnw -f $HOME/pom.xml clean package
+# Étape 1 : Build
+FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /app
 
-COPY .mvn/ .mvn/
-COPY mvnw .
-COPY mvnw.cmd .
+# On copie le pom.xml et on télécharge les dépendances (cache Docker)
 COPY pom.xml .
+RUN mvn dependency:go-offline
 
-RUN mvn dependency:go-offline -B
-
-
-COPY src/ src/
-
+# On copie le code source et on build (on saute les tests ici car 
+# le pipeline CI/CD les aura déjà lancés avant pour valider l'étape)
+COPY src ./src
 RUN mvn clean package -DskipTests
-FROM eclipse-temurin:17-jre-jammy 
-ARG JAR_FILE=/usr/app/target/*.jar
-COPY --from=build $JAR_FILE /app/runner.jar
+
+# Étape 2 : Run
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/runner.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
