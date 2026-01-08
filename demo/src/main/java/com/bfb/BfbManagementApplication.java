@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class BfbManagementApplication {
 
 	public static void main(String[] args) {
-		//SpringApplication.run(BfbManagementApplication.class, args);
+		SpringApplication.run(BfbManagementApplication.class, args);
 	}
 
 }
